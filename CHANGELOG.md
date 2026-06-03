@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.4 - 2026-06-03
+
+### Fixes
+- Remove MainWindow creation at startup to prevent ghost popup window
+
 ## 0.0.3 - 2026-06-03
 
 ### Features
