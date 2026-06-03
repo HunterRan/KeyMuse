@@ -24,6 +24,8 @@ public class HookManager : IDisposable
     private Thread? _hookThread;
     private CancellationTokenSource? _cts;
     private bool _isRunning;
+    private HookProc? _keyboardHookProc;
+    private HookProc? _mouseHookProc;
 
     public event Action<InputEvent>? OnInputEvent;
     public event Action<string>? OnError;
@@ -77,8 +79,10 @@ public class HookManager : IDisposable
 
         try
         {
-            _keyboardHookId = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardHookCallback, nint.Zero, 0);
-            _mouseHookId = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, nint.Zero, 0);
+            _keyboardHookProc = KeyboardHookCallback;
+            _mouseHookProc = MouseHookCallback;
+            _keyboardHookId = SetWindowsHookEx(WH_KEYBOARD_LL, _keyboardHookProc, nint.Zero, 0);
+            _mouseHookId = SetWindowsHookEx(WH_MOUSE_LL, _mouseHookProc, nint.Zero, 0);
 
             while (!token.IsCancellationRequested)
             {
@@ -113,11 +117,13 @@ public class HookManager : IDisposable
     {
         if (_keyboardHookId == nint.Zero)
         {
-            _keyboardHookId = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardHookCallback, nint.Zero, 0);
+            _keyboardHookProc = KeyboardHookCallback;
+            _keyboardHookId = SetWindowsHookEx(WH_KEYBOARD_LL, _keyboardHookProc, nint.Zero, 0);
         }
         if (_mouseHookId == nint.Zero)
         {
-            _mouseHookId = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, nint.Zero, 0);
+            _mouseHookProc = MouseHookCallback;
+            _mouseHookId = SetWindowsHookEx(WH_MOUSE_LL, _mouseHookProc, nint.Zero, 0);
         }
     }
 
