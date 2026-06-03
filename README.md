@@ -78,9 +78,14 @@ dotnet publish src/KeyMuse.Wpf/KeyMuse.Wpf.csproj -c Release -o ./publish
 
 ### Keyboard Shortcuts
 
-| Key         | Action            |
-|-------------|-------------------|
-| `VK_INSERT` | Auto-clicker trigger (configurable) |
+| Key  | Action                     |
+|------|----------------------------|
+| `F6` | Toggle recording           |
+| `F7` | Play last recording / stop replay |
+| `F8` | Toggle auto-clicker        |
+| `F9` | Emergency stop all tasks   |
+| `F10`| Show/hide main window      |
+| `INS`| Auto-clicker trigger (configurable) |
 
 ---
 
@@ -102,14 +107,20 @@ KeyMuse/
 │   └── KeyMuse.Wpf/            # WPF desktop application
 │       ├── App.xaml.cs             # Entry point, tray icon, window management
 │       ├── MainWindow.xaml(.cs)    # Control panel UI
-│       └── HUDWindow.xaml(.cs)     # Always-on-top status overlay
+│       ├── HUDWindow.xaml(.cs)     # Always-on-top status overlay
+│       └── HotKeyManager.cs        # Global hotkey registration (F6-F10)
 ├── tests/
-│   └── KeyMuse.Tests/          # xUnit tests
+│   └── KeyMuse.Tests/          # xUnit tests (26 tests)
 │       ├── RecorderTests.cs        # Serialization roundtrip, save/load
 │       ├── ReplayEngineTests.cs    # Loop mode behavior
-│       └── ConfigManagerTests.cs   # Profile CRUD operations
+│       ├── ConfigManagerTests.cs   # Profile CRUD operations
+│       ├── AutoClickerTests.cs     # Start/stop lifecycle
+│       ├── HookManagerTests.cs     # Lifecycle & disposal
+│       └── InputCoordinatorTests.cs # Mutex behavior
+├── assets/                     # Icon assets (SVG, ICO, PNG)
 ├── KeyMuse.sln
 ├── README.md
+├── README.zh-CN.md
 └── LICENSE
 ```
 
