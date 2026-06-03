@@ -51,7 +51,7 @@
                 <Button Content="↓ 下移" Margin="0 0 4 0" Padding="8 2" Click="MoveDown_Click"/>
             </WrapPanel>
 
-            <Border Grid.Row="3" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0 -1 0 0" Padding="0 8 0 0">
+            <Border Grid.Row="3" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0 1 0 0" Padding="0 8 0 0">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>

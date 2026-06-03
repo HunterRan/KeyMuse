@@ -15,8 +15,17 @@ public partial class App : System.Windows.Application
     {
         try
         {
-            var msg = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {stage}: {ex.GetType().FullName}: {ex.Message}\r\n{ex.StackTrace}\r\n";
-            System.IO.File.AppendAllText(CrashLogPath, msg);
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {stage}: {ex.GetType().FullName}: {ex.Message}");
+            var inner = ex.InnerException;
+            while (inner != null)
+            {
+                sb.AppendLine($"  Inner: {inner.GetType().FullName}: {inner.Message}");
+                sb.AppendLine($"  Inner Stack: {inner.StackTrace}");
+                inner = inner.InnerException;
+            }
+            sb.AppendLine(ex.StackTrace);
+            System.IO.File.AppendAllText(CrashLogPath, sb.ToString());
         }
         catch { }
     }

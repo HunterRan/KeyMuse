@@ -40,7 +40,8 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
-        _app.HookManager.Stop();
+        if (_app?.HookManager != null)
+            _app.HookManager.Stop();
         base.OnClosed(e);
     }
 }
