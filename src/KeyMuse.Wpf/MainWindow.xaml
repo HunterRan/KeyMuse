@@ -31,9 +31,7 @@
                 <pages:RecordingsPage/>
             </TabItem>
             <TabItem Header="工作流">
-                <Grid>
-                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="工作流（待实现）" Foreground="Gray"/>
-                </Grid>
+                <pages:WorkflowsPage/>
             </TabItem>
             <TabItem Header="设置">
                 <Grid>

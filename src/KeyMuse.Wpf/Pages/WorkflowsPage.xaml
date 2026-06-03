@@ -1,0 +1,79 @@
+<UserControl x:Class="KeyMuse.Wpf.Pages.WorkflowsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left: Workflow List -->
+        <Border Grid.Column="0" BorderBrush="#ccc" BorderThickness="0 0 1 0" Padding="8">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="工作流" FontWeight="Bold" Margin="0 0 0 8"/>
+                <ListBox Grid.Row="1" x:Name="WorkflowList" DisplayMemberPath="Name" SelectionChanged="WorkflowList_SelectionChanged"/>
+                <WrapPanel Grid.Row="2" Margin="0 8 0 0">
+                    <Button Content="+ 新建" Margin="0 0 4 0" Padding="8 2" Click="NewWorkflow_Click"/>
+                    <Button Content="🗑 删除" Padding="8 2" Click="DeleteWorkflow_Click"/>
+                </WrapPanel>
+            </Grid>
+        </Border>
+
+        <!-- Right: Workflow Details + Execution -->
+        <Grid Grid.Column="1" Margin="8">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="工作流步骤" FontWeight="Bold" Margin="0 0 0 4"/>
+
+            <!-- Steps List -->
+            <ListView Grid.Row="1" x:Name="StepList" Margin="0 4">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="步骤" Width="40"/>
+                        <GridViewColumn Header="录制文件" Width="200"/>
+                        <GridViewColumn Header="次数" Width="60"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+
+            <!-- Step Add/Remove -->
+            <WrapPanel Grid.Row="2" Margin="0 4">
+                <Button Content="+ 添加步骤" Margin="0 0 4 0" Padding="8 2" Click="AddStep_Click"/>
+                <Button Content="− 移除步骤" Margin="0 0 4 0" Padding="8 2" Click="RemoveStep_Click"/>
+                <Button Content="↑ 上移" Margin="0 0 4 0" Padding="8 2" Click="MoveUp_Click"/>
+                <Button Content="↓ 下移" Margin="0 0 4 0" Padding="8 2" Click="MoveDown_Click"/>
+            </WrapPanel>
+
+            <!-- Execution Controls -->
+            <Border Grid.Row="3" BorderBrush="#ccc" BorderThickness="0 1 0 0" Padding="0 8 0 0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0" Content="重复：" VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="1" x:Name="RepeatCountBox" Margin="4" Text="1" VerticalAlignment="Center"/>
+                    <Label Grid.Column="2" Content="次" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="3" x:Name="ExecStatus" VerticalAlignment="Center" Margin="8 0"/>
+                    <WrapPanel Grid.Column="4">
+                        <Button x:Name="RunBtn" Content="▶ 执行" Margin="0 0 4 0" Padding="12 4" Width="70" Click="RunBtn_Click"/>
+                        <Button x:Name="StopExecBtn" Content="■ 停止" Padding="12 4" Width="70" Click="StopExecBtn_Click"/>
+                    </WrapPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
