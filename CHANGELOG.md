@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.5 - 2026-06-03
+
+### Fixes
+- Fix HotKeyManager creating visible "HotKeySource" popup window by using HWND_MESSAGE
+- Remove MainWindow creation at startup to prevent ghost popup window
+
 ## 0.0.4 - 2026-06-03
 
 ### Fixes

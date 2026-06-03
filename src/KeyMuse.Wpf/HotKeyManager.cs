@@ -10,9 +10,17 @@ public sealed class HotKeyManager : IDisposable
     private readonly Dictionary<int, Action> _handlers = new();
     private int _nextId;
 
+    private static readonly IntPtr HWND_MESSAGE = new(-3);
+
     public HotKeyManager()
     {
-        var ps = new HwndSourceParameters("HotKeySource");
+        var ps = new HwndSourceParameters("HotKeySource")
+        {
+            ParentWindow = HWND_MESSAGE,
+            WindowStyle = 0,
+            Width = 0,
+            Height = 0,
+        };
         _source = new HwndSource(ps);
         _source.AddHook(WndProc);
     }
