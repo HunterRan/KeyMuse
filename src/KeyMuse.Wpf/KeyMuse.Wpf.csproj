@@ -7,13 +7,13 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>KeyMuse.Wpf</RootNamespace>
-    <ApplicationIcon>KeyMuse.ico</ApplicationIcon>
+    <ApplicationIcon>..\..\assets\KeyMuse.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\KeyMuse.Core\KeyMuse.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="KeyMuse.ico">
+    <Content Include="..\..\assets\KeyMuse.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
