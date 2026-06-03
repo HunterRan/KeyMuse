@@ -1,20 +1,23 @@
 <Window x:Class="KeyMuse.Wpf.Pages.TextInputDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="输入" Height="150" Width="350"
+        Title="KeyMuse" Height="150" Width="360"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
-        ResizeMode="NoResize">
-    <Grid Margin="12">
+        ResizeMode="NoResize"
+        Background="{StaticResource BgBrush}"
+        Foreground="{StaticResource TextBrush}"
+        BorderBrush="{StaticResource BorderBrush}">
+    <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" x:Name="PromptText" Margin="0 0 0 8"/>
-        <TextBox Grid.Row="1" x:Name="InputBox" VerticalAlignment="Center" Margin="0 0 0 8"/>
+        <TextBlock Grid.Row="0" x:Name="PromptText" Margin="0 0 0 12" FontSize="13"/>
+        <TextBox Grid.Row="1" x:Name="InputBox" VerticalAlignment="Center" Margin="0 0 0 12"/>
         <WrapPanel Grid.Row="2" HorizontalAlignment="Right">
-            <Button Content="确定" Margin="0 0 8 0" Padding="12 4" IsDefault="True" Click="OkBtn_Click"/>
-            <Button Content="取消" Padding="12 4" IsCancel="True"/>
+            <Button Content="确定" Margin="0 0 8 0" Padding="14 6" IsDefault="True" Click="OkBtn_Click" Background="{StaticResource AccentBrush}"/>
+            <Button Content="取消" Padding="14 6" IsCancel="True"/>
         </WrapPanel>
     </Grid>
 </Window>

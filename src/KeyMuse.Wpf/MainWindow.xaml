@@ -3,7 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:pages="clr-namespace:KeyMuse.Wpf.Pages"
         Title="KeyMuse" Height="560" Width="720"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BgBrush}"
+        Foreground="{StaticResource TextBrush}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -11,35 +13,32 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Top: Profile bar -->
-        <Border Grid.Row="0" BorderBrush="#ccc" BorderThickness="0 0 0 1" Padding="8">
+        <Border Grid.Row="0" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0 0 0 1" Padding="8">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Label Grid.Column="0" Content="配置：" VerticalAlignment="Center"/>
-                <ComboBox Grid.Column="1" x:Name="ProfileCombo" Margin="4" SelectionChanged="ProfileCombo_SelectionChanged"/>
+                <Label Grid.Column="0" Content="配置：" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
+                <ComboBox Grid.Column="1" x:Name="ProfileCombo" Margin="4" MinWidth="150"/>
                 <Button Grid.Column="2" Content="+ 新建" Margin="4" Padding="8 2" Click="NewProfile_Click"/>
             </Grid>
         </Border>
 
-        <!-- Center: Tabs -->
-        <TabControl Grid.Row="1" Margin="8">
-            <TabItem Header="录制管理">
+        <TabControl Grid.Row="1" Margin="0" BorderThickness="0">
+            <TabItem Header="录制管理" FontSize="13">
                 <pages:RecordingsPage/>
             </TabItem>
-            <TabItem Header="工作流">
+            <TabItem Header="工作流" FontSize="13">
                 <pages:WorkflowsPage/>
             </TabItem>
-            <TabItem Header="设置">
+            <TabItem Header="设置" FontSize="13">
                 <pages:SettingsPage/>
             </TabItem>
         </TabControl>
 
-        <!-- Bottom: Status bar -->
-        <StatusBar Grid.Row="2">
+        <StatusBar Grid.Row="2" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0 1 0 0">
             <StatusBarItem x:Name="StatusItem" Content="就绪"/>
         </StatusBar>
     </Grid>
