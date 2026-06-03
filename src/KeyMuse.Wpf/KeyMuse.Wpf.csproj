@@ -8,8 +8,6 @@
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>KeyMuse.Wpf</RootNamespace>
     <ApplicationIcon>KeyMuse.ico</ApplicationIcon>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <NoWarn>$(NoWarn);WFAC010</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\KeyMuse.Core\KeyMuse.Core.csproj" />
