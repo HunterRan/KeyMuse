@@ -73,8 +73,6 @@ public partial class App : System.Windows.Application
 
             _hudWindow = new HUDWindow(this);
             _hudWindow.Show();
-
-            _mainWindow = new MainWindow(this);
         }
         catch (Exception ex)
         {
