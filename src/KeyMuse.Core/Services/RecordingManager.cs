@@ -27,7 +27,7 @@ public class RecordingManager
     public string[] ListCategories()
     {
         var dirs = System.IO.Directory.GetDirectories(_baseDir)
-            .Select(System.IO.Path.GetFileName)
+            .Select(p => System.IO.Path.GetFileName(p)!)
             .ToArray();
         return dirs.OrderBy(x => x == "\u672a\u5206\u7c7b" ? 0 : 1)
                    .ThenBy(x => x)
