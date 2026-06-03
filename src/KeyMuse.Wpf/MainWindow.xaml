@@ -1,19 +1,18 @@
 <Window x:Class="KeyMuse.Wpf.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="KeyMuse" Height="480" Width="520"
+        xmlns:pages="clr-namespace:KeyMuse.Wpf.Pages"
+        Title="KeyMuse" Height="560" Width="720"
         WindowStartupLocation="CenterScreen">
-    <Grid Margin="10">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" BorderBrush="#ccc" BorderThickness="0 0 0 1" Padding="0 0 0 8" Margin="0 0 0 8">
+        <!-- Top: Profile bar -->
+        <Border Grid.Row="0" BorderBrush="#ccc" BorderThickness="0 0 0 1" Padding="8">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -26,64 +25,25 @@
             </Grid>
         </Border>
 
-        <GroupBox Grid.Row="1" Header="录制" Margin="0 4" Padding="8">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" x:Name="RecordingStatus" VerticalAlignment="Center" Text="就绪"/>
-                <WrapPanel Grid.Column="1">
-                    <Button x:Name="RecordBtn" Content="● 录制" Margin="4" Padding="12 4" Click="RecordBtn_Click" Width="80"/>
-                </WrapPanel>
-            </Grid>
-        </GroupBox>
+        <!-- Center: Tabs -->
+        <TabControl Grid.Row="1" Margin="8">
+            <TabItem Header="录制管理">
+                <pages:RecordingsPage/>
+            </TabItem>
+            <TabItem Header="工作流">
+                <Grid>
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="工作流（待实现）" Foreground="Gray"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="设置">
+                <Grid>
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="设置（待实现）" Foreground="Gray"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
 
-        <GroupBox Grid.Row="2" Header="回放" Margin="0 4" Padding="8">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <WrapPanel Grid.Row="0">
-                    <Button x:Name="ReplayBtn" Content="▶ 回放" Margin="4" Padding="12 4" Click="ReplayBtn_Click" Width="80"/>
-                    <Button x:Name="StopBtn" Content="■ 停止" Margin="4" Padding="12 4" Click="StopBtn_Click" Width="80"/>
-                    <Button x:Name="LoadBtn" Content="📂 加载录制" Margin="4" Padding="12 4" Click="LoadBtn_Click"/>
-                </WrapPanel>
-                <WrapPanel Grid.Row="1" Margin="0 4 0 0">
-                    <Label Content="循环模式：" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="LoopModeCombo" Margin="4" SelectedIndex="0">
-                        <ComboBoxItem Content="单次"/>
-                        <ComboBoxItem Content="N 次"/>
-                        <ComboBoxItem Content="无限"/>
-                    </ComboBox>
-                    <TextBox x:Name="LoopCountBox" Margin="4" Width="60" Text="3" IsEnabled="False"/>
-                    <Label Content="次" VerticalAlignment="Center"/>
-                    <Label Content="间隔：" VerticalAlignment="Center"/>
-                    <TextBox x:Name="LoopIntervalBox" Margin="4" Width="60" Text="1000"/>
-                    <Label Content="ms" VerticalAlignment="Center"/>
-                </WrapPanel>
-            </Grid>
-        </GroupBox>
-
-        <GroupBox Grid.Row="3" Header="连点" Margin="0 4" Padding="8">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Button x:Name="ClickerBtn" Content="🔁 启动" Margin="4" Padding="12 4" Click="ClickerBtn_Click" Width="80"/>
-                <WrapPanel Grid.Column="1" Margin="8 0">
-                    <Label Content="间隔：" VerticalAlignment="Center"/>
-                    <TextBox x:Name="ClickIntervalBox" Margin="4" Width="60" Text="1000"/>
-                    <Label Content="ms" VerticalAlignment="Center"/>
-                </WrapPanel>
-                <TextBlock Grid.Column="2" x:Name="ClickerStatus" VerticalAlignment="Center" Text="已停止"/>
-            </Grid>
-        </GroupBox>
-
-        <StatusBar Grid.Row="5" VerticalAlignment="Bottom">
+        <!-- Bottom: Status bar -->
+        <StatusBar Grid.Row="2">
             <StatusBarItem x:Name="StatusItem" Content="就绪"/>
         </StatusBar>
     </Grid>

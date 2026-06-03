@@ -33,12 +33,16 @@ public partial class App : System.Windows.Application
     public AutoClicker AutoClicker { get; }
     public ConfigManager ConfigManager { get; } = new();
     public StatusMessageQueue MessageQueue { get; } = new();
+    public RecordingManager RecordingManager { get; } = new();
+    public WorkflowManager WorkflowManager { get; } = new();
+    public WorkflowExecutor WorkflowExecutor { get; }
 
     public App()
     {
         Recorder = new Recorder(HookManager);
         ReplayEngine = new ReplayEngine(Coordinator);
         AutoClicker = new AutoClicker(Coordinator);
+        WorkflowExecutor = new WorkflowExecutor(ReplayEngine, Coordinator);
 
         Recorder.OnStatusChanged += msg => MessageQueue.Enqueue(msg);
         ReplayEngine.OnStatusChanged += msg => MessageQueue.Enqueue(msg);
