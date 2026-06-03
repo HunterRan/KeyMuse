@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO;
 using System.Security.Principal;
 using System.Windows;
 using Forms = System.Windows.Forms;
@@ -12,6 +13,7 @@ public partial class App : System.Windows.Application
     private MainWindow? _mainWindow;
     private HUDWindow? _hudWindow;
     private HotKeyManager? _hotKeyManager;
+    private string? _lastRecordingPath;
 
     public HookManager HookManager { get; } = new();
     public InputCoordinator Coordinator { get; } = new();
@@ -39,8 +41,11 @@ public partial class App : System.Windows.Application
         HookManager.Start();
 
         _hotKeyManager = new HotKeyManager();
-        _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F9, OnF9Pressed);
-        _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F10, OnF10Pressed);
+        _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F6, OnF6Record);
+        _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F7, OnF7Replay);
+        _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F8, OnF8AutoClick);
+        _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F9, OnF9StopAll);
+        _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F10, OnF10ToggleUI);
 
         _hudWindow = new HUDWindow(this);
         _hudWindow.Show();
@@ -53,7 +58,7 @@ public partial class App : System.Windows.Application
         _trayIcon = new Forms.NotifyIcon
         {
             Icon = LoadAppIcon(),
-            Text = "KeyMuse - 键鼠自动化",
+            Text = "KeyMuse - 键鼠自动化\nF6录制  F7回放  F8连点  F9急停  F10窗口",
             Visible = true
         };
 
@@ -111,33 +116,18 @@ public partial class App : System.Windows.Application
         Current.Shutdown();
     }
 
-    private void OnF9Pressed()
+    private void OnF6Record()
     {
         if (Recorder.IsRecording)
         {
-            _ = Recorder.StopRecordingAsync();
-            MessageQueue.Enqueue(new Core.Models.StatusMessage
+            _ = Recorder.StopRecordingAsync().ContinueWith(t =>
             {
-                Type = Core.Models.StatusMessageType.Idle,
-                Text = "F9: 录制已停止"
+                if (t.IsCompletedSuccessfully && t.Result != null) _lastRecordingPath = t.Result;
             });
-        }
-        else if (ReplayEngine.IsPlaying)
-        {
-            ReplayEngine.Stop();
             MessageQueue.Enqueue(new Core.Models.StatusMessage
             {
                 Type = Core.Models.StatusMessageType.Idle,
-                Text = "F9: 回放已停止"
-            });
-        }
-        else if (AutoClicker.IsRunning)
-        {
-            AutoClicker.Stop();
-            MessageQueue.Enqueue(new Core.Models.StatusMessage
-            {
-                Type = Core.Models.StatusMessageType.Idle,
-                Text = "F9: 连点已停止"
+                Text = "F6: 录制已停止"
             });
         }
         else
@@ -146,12 +136,78 @@ public partial class App : System.Windows.Application
             MessageQueue.Enqueue(new Core.Models.StatusMessage
             {
                 Type = Core.Models.StatusMessageType.Recording,
-                Text = "F9: 开始录制"
+                Text = "F6: 开始录制"
             });
         }
     }
 
-    private void OnF10Pressed()
+    private async void OnF7Replay()
+    {
+        if (ReplayEngine.IsPlaying)
+        {
+            ReplayEngine.Stop();
+            MessageQueue.Enqueue(new Core.Models.StatusMessage
+            {
+                Type = Core.Models.StatusMessageType.Idle,
+                Text = "F7: 回放已停止"
+            });
+            return;
+        }
+
+        var path = _lastRecordingPath;
+        if (path == null || !File.Exists(path))
+        {
+            MessageQueue.Enqueue(new Core.Models.StatusMessage
+            {
+                Type = Core.Models.StatusMessageType.Error,
+                Text = "F7: 无可用录制文件"
+            });
+            return;
+        }
+
+        var session = await Recorder.LoadSessionAsync(path!);
+        if (session == null)
+        {
+            MessageQueue.Enqueue(new Core.Models.StatusMessage
+            {
+                Type = Core.Models.StatusMessageType.Error,
+                Text = "F7: 录制文件无效"
+            });
+            return;
+        }
+
+        _ = ReplayEngine.PlayAsync(session, LoopMode.Single);
+        MessageQueue.Enqueue(new Core.Models.StatusMessage
+        {
+            Type = Core.Models.StatusMessageType.Replaying,
+            Text = "F7: 开始回放"
+        });
+    }
+
+    private void OnF8AutoClick()
+    {
+        if (AutoClicker.IsRunning)
+        {
+            AutoClicker.Stop();
+            MessageQueue.Enqueue(new Core.Models.StatusMessage
+            {
+                Type = Core.Models.StatusMessageType.Idle,
+                Text = "F8: 连点已停止"
+            });
+        }
+        else
+        {
+            AutoClicker.KeyCode = 0x2D;
+            AutoClicker.Start();
+            MessageQueue.Enqueue(new Core.Models.StatusMessage
+            {
+                Type = Core.Models.StatusMessageType.AutoClicking,
+                Text = "F8: 开始连点"
+            });
+        }
+    }
+
+    private void OnF9StopAll()
     {
         var stopped = false;
         if (Recorder.IsRecording)
@@ -174,8 +230,20 @@ public partial class App : System.Windows.Application
             MessageQueue.Enqueue(new Core.Models.StatusMessage
             {
                 Type = Core.Models.StatusMessageType.Idle,
-                Text = "F10: 已停止所有任务"
+                Text = "F9: 已停止所有任务"
             });
+        }
+    }
+
+    private void OnF10ToggleUI()
+    {
+        if (_mainWindow != null && _mainWindow.IsVisible)
+        {
+            _mainWindow.Hide();
+        }
+        else
+        {
+            ShowMainWindow();
         }
     }
 
