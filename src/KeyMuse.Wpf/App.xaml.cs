@@ -11,6 +11,7 @@ public partial class App : System.Windows.Application
     private Forms.NotifyIcon? _trayIcon;
     private MainWindow? _mainWindow;
     private HUDWindow? _hudWindow;
+    private HotKeyManager? _hotKeyManager;
 
     public HookManager HookManager { get; } = new();
     public InputCoordinator Coordinator { get; } = new();
@@ -36,6 +37,10 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
         SetupTrayIcon();
         HookManager.Start();
+
+        _hotKeyManager = new HotKeyManager();
+        _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F9, OnF9Pressed);
+        _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F10, OnF10Pressed);
 
         _hudWindow = new HUDWindow(this);
         _hudWindow.Show();
@@ -106,8 +111,77 @@ public partial class App : System.Windows.Application
         Current.Shutdown();
     }
 
+    private void OnF9Pressed()
+    {
+        if (Recorder.IsRecording)
+        {
+            _ = Recorder.StopRecordingAsync();
+            MessageQueue.Enqueue(new Core.Models.StatusMessage
+            {
+                Type = Core.Models.StatusMessageType.Idle,
+                Text = "F9: 录制已停止"
+            });
+        }
+        else if (ReplayEngine.IsPlaying)
+        {
+            ReplayEngine.Stop();
+            MessageQueue.Enqueue(new Core.Models.StatusMessage
+            {
+                Type = Core.Models.StatusMessageType.Idle,
+                Text = "F9: 回放已停止"
+            });
+        }
+        else if (AutoClicker.IsRunning)
+        {
+            AutoClicker.Stop();
+            MessageQueue.Enqueue(new Core.Models.StatusMessage
+            {
+                Type = Core.Models.StatusMessageType.Idle,
+                Text = "F9: 连点已停止"
+            });
+        }
+        else
+        {
+            Recorder.StartRecording();
+            MessageQueue.Enqueue(new Core.Models.StatusMessage
+            {
+                Type = Core.Models.StatusMessageType.Recording,
+                Text = "F9: 开始录制"
+            });
+        }
+    }
+
+    private void OnF10Pressed()
+    {
+        var stopped = false;
+        if (Recorder.IsRecording)
+        {
+            _ = Recorder.StopRecordingAsync();
+            stopped = true;
+        }
+        if (ReplayEngine.IsPlaying)
+        {
+            ReplayEngine.Stop();
+            stopped = true;
+        }
+        if (AutoClicker.IsRunning)
+        {
+            AutoClicker.Stop();
+            stopped = true;
+        }
+        if (stopped)
+        {
+            MessageQueue.Enqueue(new Core.Models.StatusMessage
+            {
+                Type = Core.Models.StatusMessageType.Idle,
+                Text = "F10: 已停止所有任务"
+            });
+        }
+    }
+
     private void ShutdownApp()
     {
+        _hotKeyManager?.Dispose();
         Recorder.StopRecordingAsync().ConfigureAwait(false);
         ReplayEngine.Stop();
         AutoClicker.Stop();
