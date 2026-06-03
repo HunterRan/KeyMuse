@@ -1,83 +1,158 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#1a1a2e"/>
-      <stop offset="100%" stop-color="#16213e"/>
-    </linearGradient>
-    <linearGradient id="keyGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#2d2d5e"/>
-      <stop offset="100%" stop-color="#1a1a3e"/>
-    </linearGradient>
-    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+    <!-- Background gradient - deep cosmic -->
+    <radialGradient id="bg" cx="45%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1e1b3b"/>
+      <stop offset="60%" stop-color="#0f0c29"/>
+      <stop offset="100%" stop-color="#070510"/>
+    </radialGradient>
+
+    <!-- Main K gradient - flowing aurora -->
+    <linearGradient id="kGrad" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#00d4ff"/>
-      <stop offset="100%" stop-color="#7b2ff7"/>
+      <stop offset="35%" stop-color="#7b2ff7"/>
+      <stop offset="70%" stop-color="#ff2d95"/>
+      <stop offset="100%" stop-color="#ff6b35"/>
     </linearGradient>
-    <linearGradient id="keyTop" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#3a3a7a"/>
-      <stop offset="100%" stop-color="#25255a"/>
+
+    <!-- K glow gradient -->
+    <linearGradient id="kGlow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#7b2ff7" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#ff2d95" stop-opacity="0"/>
     </linearGradient>
-    <filter id="shadow">
-      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.4"/>
-    </filter>
-    <filter id="innerGlow">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+
+    <!-- Ring gradient -->
+    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="50%" stop-color="#7b2ff7"/>
+      <stop offset="100%" stop-color="#ff2d95"/>
+    </linearGradient>
+
+    <!-- Glass reflection -->
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
+
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="innerShadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+      <feOffset dx="0" dy="2" result="offset"/>
+      <feComposite in="offset" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadow"/>
+      <feFlood flood-color="#000" flood-opacity="0.5" result="color"/>
+      <feComposite in="color" in2="shadow" operator="in" result="shadow"/>
+      <feMerge>
+        <feMergeNode in="SourceGraphic"/>
+        <feMergeNode in="shadow"/>
+      </feMerge>
+    </filter>
+
+    <!-- Aurora particle filter -->
+    <filter id="particle">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
   </defs>
 
-  <!-- App icon background -->
-  <rect x="32" y="32" width="448" height="448" rx="96" ry="96" fill="url(#bg)" filter="url(#shadow)"/>
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="224" fill="url(#bg)" stroke="#1a1535" stroke-width="1.5"/>
 
-  <!-- Subtle border -->
-  <rect x="32" y="32" width="448" height="448" rx="96" ry="96" fill="none" stroke="url(#glow)" stroke-width="2" opacity="0.3"/>
+  <!-- Outer ring -->
+  <circle cx="256" cy="256" r="215" fill="none" stroke="url(#ringGrad)" stroke-width="2" opacity="0.3"/>
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#ffffff" stroke-width="0.5" opacity="0.08"/>
 
-  <!-- Keycap body -->
-  <rect x="116" y="156" width="280" height="240" rx="24" ry="24" fill="url(#keyGrad)" stroke="#4444aa" stroke-width="2"/>
+  <!-- Glass overlay -->
+  <circle cx="256" cy="256" r="224" fill="url(#glass)"/>
 
-  <!-- Keycap top face (3D effect) -->
-  <rect x="128" y="168" width="256" height="100" rx="16" ry="16" fill="url(#keyTop)" stroke="#5555cc" stroke-width="1.5"/>
+  <!-- Aurora glow behind K -->
+  <ellipse cx="256" cy="280" rx="100" ry="60" fill="url(#kGlow)" filter="url(#softGlow)"/>
 
-  <!-- Keycap shine -->
-  <rect x="140" y="176" width="120" height="40" rx="8" ry="8" fill="white" opacity="0.06"/>
+  <!-- Artistic K - flowing calligraphic strokes -->
+  <g filter="url(#glow)">
+    <!-- Main vertical stroke - elegant curved -->
+    <path d="M 172 148 
+             C 172 148, 168 220, 182 256 
+             C 192 282, 210 320, 218 364
+             C 222 386, 220 396, 216 400"
+          fill="none" stroke="url(#kGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Letter K -->
-  <text x="256" y="278" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="160" font-weight="700" text-anchor="middle" fill="url(#glow)" filter="url(#innerGlow)">K</text>
+    <!-- Upper diagonal - sweeping arc -->
+    <path d="M 185 218
+             C 210 210, 240 198, 270 186
+             C 300 174, 320 170, 340 174
+             C 355 178, 358 186, 350 198
+             C 340 214, 310 238, 268 262"
+          fill="none" stroke="url(#kGrad)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Mouse cursor icon integrated into K -->
-  <g transform="translate(310, 290)" fill="none" stroke="url(#glow)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Cursor arrow -->
-    <polygon points="0,0 28,-8 16,12" fill="url(#glow)" stroke="none"/>
-    <polygon points="28,-8 4,28 16,12" fill="none" stroke="url(#glow)" stroke-width="4"/>
+    <!-- Lower diagonal - flowing down -->
+    <path d="M 272 258
+             C 300 270, 318 292, 332 316
+             C 344 338, 350 362, 346 378
+             C 342 394, 330 400, 312 398
+             C 296 396, 274 386, 252 370"
+          fill="none" stroke="url(#kGrad)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 
-  <!-- Bottom accent line -->
-  <rect x="176" y="400" width="160" height="3" rx="1.5" ry="1.5" fill="url(#glow)" opacity="0.6"/>
+  <!-- Subtle highlight on vertical stroke -->
+  <path d="M 168 158 C 168 220, 180 256, 190 282"
+        fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.3" filter="url(#glow)"/>
 
-  <!-- Corner dots decoration -->
-  <circle cx="168" cy="172" r="4" fill="#00d4ff" opacity="0.4"/>
-  <circle cx="344" cy="172" r="4" fill="#7b2ff7" opacity="0.4"/>
-  <circle cx="168" cy="380" r="4" fill="#00d4ff" opacity="0.4"/>
-  <circle cx="344" cy="380" r="4" fill="#7b2ff7" opacity="0.4"/>
+  <!-- Mouse cursor integrated into negative space -->
+  <g transform="translate(308, 148)" opacity="0.6" filter="url(#innerShadow)">
+    <path d="M 0 0 L 8 36 L 18 26 L 28 44 L 38 38 L 28 20 L 40 18 Z"
+          fill="none" stroke="url(#kGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 4 4 L 10 30 L 18 22 L 28 40 L 32 36 L 26 20 L 34 16 Z"
+          fill="url(#kGrad)" opacity="0.3"/>
+  </g>
 
-  <!-- Grid dots subtle pattern -->
-  <g fill="#ffffff" opacity="0.03">
-    <circle cx="72" cy="72" r="2"/>
-    <circle cx="72" cy="144" r="2"/>
-    <circle cx="72" cy="216" r="2"/>
-    <circle cx="144" cy="72" r="2"/>
-    <circle cx="216" cy="72" r="2"/>
-    <circle cx="72" cy="368" r="2"/>
-    <circle cx="72" cy="440" r="2"/>
-    <circle cx="144" cy="440" r="2"/>
-    <circle cx="368" cy="72" r="2"/>
-    <circle cx="440" cy="72" r="2"/>
-    <circle cx="440" cy="144" r="2"/>
-    <circle cx="440" cy="216" r="2"/>
-    <circle cx="440" cy="368" r="2"/>
-    <circle cx="440" cy="440" r="2"/>
-    <circle cx="368" cy="440" r="2"/>
+  <!-- Decorative floating particles -->
+  <g fill="#00d4ff" opacity="0.5" filter="url(#particle)">
+    <circle cx="140" cy="160" r="2.5"/>
+    <circle cx="160" cy="380" r="2"/>
+    <circle cx="370" cy="150" r="1.8"/>
+    <circle cx="350" cy="400" r="2.2"/>
+    <circle cx="130" cy="300" r="1.5"/>
+    <circle cx="380" cy="280" r="2"/>
+  </g>
+
+  <g fill="#ff2d95" opacity="0.4" filter="url(#particle)">
+    <circle cx="150" cy="220" r="1.5"/>
+    <circle cx="360" cy="180" r="2"/>
+    <circle cx="380" cy="360" r="1.5"/>
+    <circle cx="120" cy="350" r="1.8"/>
+  </g>
+
+  <g fill="#7b2ff7" opacity="0.3" filter="url(#particle)">
+    <circle cx="134" cy="128" r="1.2"/>
+    <circle cx="388" cy="128" r="1.5"/>
+    <circle cx="400" cy="390" r="1.2"/>
+    <circle cx="112" cy="390" r="1"/>
+  </g>
+
+  <!-- Outer shimmer dots -->
+  <g fill="#ffffff" opacity="0.12">
+    <circle cx="256" cy="40" r="2"/>
+    <circle cx="256" cy="472" r="2"/>
+    <circle cx="40" cy="256" r="2"/>
+    <circle cx="472" cy="256" r="2"/>
+    <circle cx="108" cy="108" r="1.5"/>
+    <circle cx="404" cy="108" r="1.5"/>
+    <circle cx="108" cy="404" r="1.5"/>
+    <circle cx="404" cy="404" r="1.5"/>
   </g>
 </svg>
