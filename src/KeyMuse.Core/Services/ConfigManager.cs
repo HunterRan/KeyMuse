@@ -13,6 +13,8 @@ public class ConfigManager
 
     public event Action<StatusMessage>? OnStatusChanged;
 
+    public string ProfilesDir => _basePath;
+
     public ConfigManager()
     {
         _basePath = Path.Combine(

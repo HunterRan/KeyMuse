@@ -34,9 +34,7 @@
                 <pages:WorkflowsPage/>
             </TabItem>
             <TabItem Header="设置">
-                <Grid>
-                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="设置（待实现）" Foreground="Gray"/>
-                </Grid>
+                <pages:SettingsPage/>
             </TabItem>
         </TabControl>
 
