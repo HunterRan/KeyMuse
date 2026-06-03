@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KeyMuse - Keyboard &amp; Mouse Automation Tool</title>
+<style>
+  :root {
+    --bg: #0f0c29;
+    --surface: #1a1535;
+    --card: #1e1b3b;
+    --text: #e0d8f0;
+    --text-muted: #9080b0;
+    --accent: #00d4ff;
+    --accent2: #7b2ff7;
+    --accent3: #ff2d95;
+    --border: #2a2550;
+    --radius: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.7;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .container {
+    max-width: 820px;
+    width: 100%;
+    padding: 0 20px;
+  }
+
+  /* Header */
+  header {
+    padding: 48px 0 32px;
+    text-align: center;
+    position: relative;
+  }
+  header h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+  }
+  header p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    margin-top: 8px;
+  }
+
+  /* Language Switcher */
+  .lang-bar {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 32px;
+  }
+  .lang-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 6px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all .2s;
+  }
+  .lang-btn:hover { border-color: var(--accent); color: var(--text); }
+  .lang-btn.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    border-color: transparent;
+    font-weight: 600;
+  }
+
+  /* Lang toggle */
+  .lang-en, .lang-zh { display: none; }
+  body.show-en .lang-en { display: block; }
+  body.show-en .lang-zh { display: none; }
+  body.show-zh .lang-zh { display: block; }
+  body.show-zh .lang-en { display: none; }
+
+  /* Content */
+  section { margin-bottom: 32px; }
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+    color: var(--accent);
+  }
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 16px 0 8px;
+    color: var(--accent2);
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 12px;
+  }
+  .card p { margin-bottom: 8px; }
+  .card p:last-child { margin-bottom: 0; }
+
+  ul, ol { padding-left: 20px; margin: 8px 0; }
+  li { margin-bottom: 4px; }
+
+  /* Hotkey table */
+  .hotkeys {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    gap: 4px 16px;
+    margin: 12px 0;
+  }
+  .hotkeys .key {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    color: var(--accent);
+    text-align: center;
+    min-width: 48px;
+  }
+  .hotkeys .label-en, .hotkeys .label-zh { color: var(--text); font-size: 0.9rem; }
+
+  /* Badge */
+  .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent2), var(--accent3));
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Code */
+  code {
+    background: var(--surface);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.85em;
+    color: var(--accent);
+  }
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    overflow-x: auto;
+    margin: 12px 0;
+  }
+  pre code { background: none; padding: 0; color: var(--text); }
+
+  /* Links */
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 40px 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+  footer a { color: var(--text-muted); }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    header h1 { font-size: 2rem; }
+    .hotkeys { grid-template-columns: auto 1fr; }
+    .hotkeys .label-en:nth-child(3n),
+    .hotkeys .label-zh:nth-child(3n) { grid-column: 2; }
+  }
+</style>
+</head>
+<body class="show-en">
+
+<div class="container">
+  <header>
+    <h1>KeyMuse</h1>
+    <p class="lang-en">Keyboard &amp; Mouse Automation Tool for Windows</p>
+    <p class="lang-zh">Windows 键盘鼠标自动化工具</p>
+  </header>
+
+  <div class="lang-bar">
+    <button class="lang-btn" onclick="switchLang('en')">English</button>
+    <button class="lang-btn active" onclick="switchLang('zh')">中文</button>
+  </div>
+
+  <!-- ===== ENGLISH ===== -->
+  <div class="lang-en">
+
+    <section>
+      <h2>Features</h2>
+      <div class="card">
+        <h3>Global Input Hooking</h3>
+        <p>Low-level keyboard/mouse hooks via <code>SetWindowsHookEx</code>. Captures events system-wide with 500ms heartbeat health monitoring and auto-reconnect on failure.</p>
+      </div>
+      <div class="card">
+        <h3>Recording &amp; Replay</h3>
+        <p>Record events to <code>.keymuse</code> files (ZIP: <code>session.json</code> + <code>events.bin</code>). Replay with Single / N-times / Infinite loop modes.</p>
+      </div>
+      <div class="card">
+        <h3>Auto Clicker</h3>
+        <p>Configurable interval auto-clicking (≥100ms). Trigger via VK_INSERT or toggle with <kbd>F8</kbd>.</p>
+      </div>
+      <div class="card">
+        <h3>Global Hotkeys</h3>
+        <div class="hotkeys">
+          <span class="key">F6</span><span class="label-en">Toggle recording</span>
+          <span class="key">F7</span><span class="label-en">Play last recording / stop replay</span>
+          <span class="key">F8</span><span class="label-en">Toggle auto-clicker</span>
+          <span class="key">F9</span><span class="label-en">Emergency stop all</span>
+          <span class="key">F10</span><span class="label-en">Show/hide main window</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Desktop UI</h3>
+        <p>WPF main window with profile management, HUD overlay, system tray icon, and config import/export (<code>.keymuse-profile</code>).</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Download</h2>
+      <div class="card">
+        <p>Pre-built binaries: <a href="https://github.com/HunterRan/KeyMuse/releases">GitHub Releases</a></p>
+        <p>Single-file self-contained executable (~155MB) — no runtime required.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Build from Source</h2>
+      <div class="card">
+        <p>Requires <a href="https://dotnet.microsoft.com/download/dotnet/8.0">.NET 8.0 SDK</a> and Windows 10+.</p>
+        <pre><code>git clone https://github.com/HunterRan/KeyMuse.git
+cd KeyMuse
+dotnet restore
+dotnet build --configuration Release
+dotnet test
+dotnet publish src/KeyMuse.Wpf/KeyMuse.Wpf.csproj -c Release -o ./publish</code></pre>
+      </div>
+    </section>
+
+    <section>
+      <h2>Architecture</h2>
+      <div class="card">
+        <p><strong>KeyMuse.Core</strong> — hooking, recording, replay engine, auto-clicker, config</p>
+        <p><strong>KeyMuse.Wpf</strong> — WPF desktop UI, tray icon, HUD, global hotkeys</p>
+        <p><strong>KeyMuse.Tests</strong> — 26 xUnit tests</p>
+      </div>
+      <div class="card">
+        <p><span class="badge">MIT</span> Licensed under the MIT License.</p>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ===== CHINESE ===== -->
+  <div class="lang-zh">
+
+    <section>
+      <h2>功能特性</h2>
+      <div class="card">
+        <h3>全局输入钩子</h3>
+        <p>基于 <code>SetWindowsHookEx</code> 的低级键盘/鼠标钩子。500ms 心跳监控，断开自动重连。</p>
+      </div>
+      <div class="card">
+        <h3>录制与回放</h3>
+        <p>录制事件到 <code>.keymuse</code> 文件（ZIP 格式：<code>session.json</code> + <code>events.bin</code>）。支持单次 / N 次 / 无限循环回放。</p>
+      </div>
+      <div class="card">
+        <h3>连点器</h3>
+        <p>可配置间隔自动按键（≥100ms）。默认 VK_INSERT 触发，或按 <kbd>F8</kbd> 开关。</p>
+      </div>
+      <div class="card">
+        <h3>全局快捷键</h3>
+        <div class="hotkeys">
+          <span class="key">F6</span><span class="label-zh">录制 开始/停止</span>
+          <span class="key">F7</span><span class="label-zh">回放 上次录制/停止</span>
+          <span class="key">F8</span><span class="label-zh">连点 开关</span>
+          <span class="key">F9</span><span class="label-zh">急停 所有任务</span>
+          <span class="key">F10</span><span class="label-zh">窗口 显示/隐藏</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>桌面界面</h3>
+        <p>WPF 主面板（配置管理、录制/回放控制）、HUD 叠加层、系统托盘图标、配置导入/导出。</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>下载</h2>
+      <div class="card">
+        <p>预编译二进制文件：<a href="https://github.com/HunterRan/KeyMuse/releases">GitHub Releases</a></p>
+        <p>单文件自包含可执行文件（~155MB），无需安装运行时。</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>从源码构建</h2>
+      <div class="card">
+        <p>需要 <a href="https://dotnet.microsoft.com/download/dotnet/8.0">.NET 8.0 SDK</a> 和 Windows 10+。</p>
+        <pre><code>git clone https://github.com/HunterRan/KeyMuse.git
+cd KeyMuse
+dotnet restore
+dotnet build --configuration Release
+dotnet test
+dotnet publish src/KeyMuse.Wpf/KeyMuse.Wpf.csproj -c Release -o ./publish</code></pre>
+      </div>
+    </section>
+
+    <section>
+      <h2>项目架构</h2>
+      <div class="card">
+        <p><strong>KeyMuse.Core</strong> — 钩子、录制、回放引擎、连点器、配置管理</p>
+        <p><strong>KeyMuse.Wpf</strong> — WPF 桌面界面、托盘图标、HUD、全局快捷键</p>
+        <p><strong>KeyMuse.Tests</strong> — 26 个 xUnit 单元测试</p>
+      </div>
+      <div class="card">
+        <p><span class="badge">MIT</span> 基于 MIT License 开源。</p>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    <p><a href="https://github.com/HunterRan/KeyMuse">GitHub</a></p>
+  </footer>
+</div>
+
+<script>
+  function switchLang(lang) {
+    document.body.className = 'show-' + lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.lang-btn[onclick*="' + lang + '"]').classList.add('active');
+    localStorage.setItem('keymuse-lang', lang);
+  }
+  (function() {
+    var saved = localStorage.getItem('keymuse-lang');
+    if (saved) switchLang(saved);
+  })();
+</script>
+
+</body>
+</html>
