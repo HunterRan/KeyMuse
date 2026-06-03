@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Security.Principal;
 using System.Windows;
 using Forms = System.Windows.Forms;
 using KeyMuse.Core.Services;
@@ -68,6 +70,26 @@ public partial class App : System.Windows.Application
         }
         _mainWindow.Show();
         _mainWindow.Activate();
+    }
+
+    public static bool IsRunningAsAdmin()
+    {
+        using var identity = WindowsIdentity.GetCurrent();
+        var principal = new WindowsPrincipal(identity);
+        return principal.IsInRole(WindowsBuiltInRole.Administrator);
+    }
+
+    public static void RestartAsAdmin(string? args = null)
+    {
+        var proc = new ProcessStartInfo
+        {
+            FileName = Environment.ProcessPath,
+            UseShellExecute = true,
+            Verb = "runas",
+            Arguments = args ?? ""
+        };
+        Process.Start(proc);
+        Current.Shutdown();
     }
 
     private void ShutdownApp()

@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Text.Json;
 using KeyMuse.Core.Models;
 
@@ -96,6 +97,45 @@ public class ConfigManager
         SaveProfile(config);
         _current = config;
         return config;
+    }
+
+    public string ExportProfile(string profileName, string outputPath)
+    {
+        var config = LoadProfile(profileName);
+        if (config == null) throw new FileNotFoundException($"Profile '{profileName}' not found");
+
+        using var stream = File.Create(outputPath);
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Create);
+        var entry = archive.CreateEntry("profile.json");
+        using var writer = new StreamWriter(entry.Open());
+        var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+        writer.Write(json);
+
+        return outputPath;
+    }
+
+    public ProfileConfig? ImportProfile(string filePath)
+    {
+        if (!File.Exists(filePath)) return null;
+
+        try
+        {
+            using var archive = ZipFile.OpenRead(filePath);
+            var entry = archive.GetEntry("profile.json");
+            if (entry == null) return null;
+
+            using var reader = new StreamReader(entry.Open());
+            var json = reader.ReadToEnd();
+            var config = JsonSerializer.Deserialize<ProfileConfig>(json);
+            if (config == null || string.IsNullOrWhiteSpace(config.Name)) return null;
+
+            SaveProfile(config);
+            return config;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private string GetProfileDir(string name) =>

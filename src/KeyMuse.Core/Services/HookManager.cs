@@ -66,9 +66,6 @@ public class HookManager : IDisposable
 
     private void HookThreadProc(CancellationToken token)
     {
-        _keyboardHookId = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardHookCallback, nint.Zero, 0);
-        _mouseHookId = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, nint.Zero, 0);
-
         var heartbeatTimer = new System.Threading.Timer(_ =>
         {
             if (_keyboardHookId == nint.Zero && _mouseHookId == nint.Zero)
@@ -78,24 +75,38 @@ public class HookManager : IDisposable
             }
         }, null, 0, 500);
 
-        while (!token.IsCancellationRequested)
+        try
         {
-            if (NativeMethods.PeekMessage(out _, nint.Zero, 0, 0, 1))
-            {
-                NativeMethods.GetMessage(out _, nint.Zero, 0, 0);
-            }
-            else
-            {
-                Thread.Sleep(1);
-            }
+            _keyboardHookId = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardHookCallback, nint.Zero, 0);
+            _mouseHookId = SetWindowsHookEx(WH_MOUSE_LL, MouseHookCallback, nint.Zero, 0);
 
-            while (_eventQueue.TryDequeue(out var evt))
+            while (!token.IsCancellationRequested)
             {
-                OnInputEvent?.Invoke(evt);
+                if (NativeMethods.PeekMessage(out _, nint.Zero, 0, 0, 1))
+                {
+                    NativeMethods.GetMessage(out _, nint.Zero, 0, 0);
+                }
+                else
+                {
+                    Thread.Sleep(1);
+                }
+
+                while (_eventQueue.TryDequeue(out var evt))
+                {
+                    OnInputEvent?.Invoke(evt);
+                }
             }
         }
-
-        heartbeatTimer.Dispose();
+        catch (Exception ex)
+        {
+            OnError?.Invoke($"HookThread 异常: {ex.Message}");
+        }
+        finally
+        {
+            heartbeatTimer.Dispose();
+            UnhookHooks();
+            _isRunning = false;
+        }
     }
 
     private void ReconnectHooks()
@@ -112,55 +123,69 @@ public class HookManager : IDisposable
 
     private nint KeyboardHookCallback(int nCode, nint wParam, nint lParam)
     {
-        if (nCode >= 0)
+        try
         {
-            var khs = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
-            var type = wParam == WM_KEYDOWN ? InputEventType.KeyDown :
-                       wParam == WM_KEYUP ? InputEventType.KeyUp : InputEventType.KeyDown;
-            _eventQueue.Enqueue(new InputEvent
+            if (nCode >= 0)
             {
-                TimeOffsetMs = Environment.TickCount,
-                Type = type,
-                VirtualKeyCode = khs.vkCode
-            });
+                var khs = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
+                var type = wParam == WM_KEYDOWN ? InputEventType.KeyDown :
+                           wParam == WM_KEYUP ? InputEventType.KeyUp : InputEventType.KeyDown;
+                _eventQueue.Enqueue(new InputEvent
+                {
+                    TimeOffsetMs = Environment.TickCount,
+                    Type = type,
+                    VirtualKeyCode = khs.vkCode
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            OnError?.Invoke($"KeyboardHook 异常: {ex.Message}");
         }
         return CallNextHookEx(nint.Zero, nCode, wParam, lParam);
     }
 
     private nint MouseHookCallback(int nCode, nint wParam, nint lParam)
     {
-        if (nCode >= 0)
+        try
         {
-            var mhs = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
-            var type = wParam switch
+            if (nCode >= 0)
             {
-                WM_MOUSEMOVE => InputEventType.MouseMove,
-                WM_LBUTTONDOWN => InputEventType.MouseDown,
-                WM_LBUTTONUP => InputEventType.MouseUp,
-                WM_RBUTTONDOWN => InputEventType.MouseDown,
-                WM_RBUTTONUP => InputEventType.MouseUp,
-                WM_MBUTTONDOWN => InputEventType.MouseDown,
-                WM_MBUTTONUP => InputEventType.MouseUp,
-                WM_MOUSEWHEEL => InputEventType.MouseWheel,
-                _ => InputEventType.MouseMove
-            };
+                var mhs = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
+                var type = wParam switch
+                {
+                    WM_MOUSEMOVE => InputEventType.MouseMove,
+                    WM_LBUTTONDOWN => InputEventType.MouseDown,
+                    WM_LBUTTONUP => InputEventType.MouseUp,
+                    WM_RBUTTONDOWN => InputEventType.MouseDown,
+                    WM_RBUTTONUP => InputEventType.MouseUp,
+                    WM_MBUTTONDOWN => InputEventType.MouseDown,
+                    WM_MBUTTONUP => InputEventType.MouseUp,
+                    WM_MOUSEWHEEL => InputEventType.MouseWheel,
+                    _ => InputEventType.MouseMove
+                };
 
-            NativeMethods.GetWindowRect(GetForegroundWindow(), out var rect);
-            _eventQueue.Enqueue(new InputEvent
-            {
-                TimeOffsetMs = Environment.TickCount,
-                Type = type,
-                X = mhs.pt.x,
-                Y = mhs.pt.y,
-                RelX = mhs.pt.x - rect.left,
-                RelY = mhs.pt.y - rect.top,
-                MouseData = (int)(wParam >> 16),
-                WindowHandle = GetForegroundWindow(),
-                WindowLeft = rect.left,
-                WindowTop = rect.top,
-                WindowWidth = rect.right - rect.left,
-                WindowHeight = rect.bottom - rect.top
-            });
+                NativeMethods.GetWindowRect(GetForegroundWindow(), out var rect);
+                _eventQueue.Enqueue(new InputEvent
+                {
+                    TimeOffsetMs = Environment.TickCount,
+                    Type = type,
+                    X = mhs.pt.x,
+                    Y = mhs.pt.y,
+                    RelX = mhs.pt.x - rect.left,
+                    RelY = mhs.pt.y - rect.top,
+                    MouseData = (int)(wParam >> 16),
+                    WindowHandle = GetForegroundWindow(),
+                    WindowLeft = rect.left,
+                    WindowTop = rect.top,
+                    WindowWidth = rect.right - rect.left,
+                    WindowHeight = rect.bottom - rect.top
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            OnError?.Invoke($"MouseHook 异常: {ex.Message}");
         }
         return CallNextHookEx(nint.Zero, nCode, wParam, lParam);
     }
@@ -246,9 +271,28 @@ public class HookManager : IDisposable
         public POINT pt;
     }
 
+    ~HookManager()
+    {
+        UnhookHooks();
+    }
+
     public void Dispose()
     {
         Stop();
         GC.SuppressFinalize(this);
+    }
+
+    private void UnhookHooks()
+    {
+        if (_keyboardHookId != nint.Zero)
+        {
+            UnhookWindowsHookEx(_keyboardHookId);
+            _keyboardHookId = nint.Zero;
+        }
+        if (_mouseHookId != nint.Zero)
+        {
+            UnhookWindowsHookEx(_mouseHookId);
+            _mouseHookId = nint.Zero;
+        }
     }
 }

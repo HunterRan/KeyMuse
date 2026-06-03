@@ -68,4 +68,41 @@ public class ConfigManagerTests
         var loaded = mgr.LoadProfile("NonExistent_" + Guid.NewGuid().ToString("N")[..8]);
         Assert.Null(loaded);
     }
+
+    [Fact]
+    public void ExportImportProfile_Roundtrip()
+    {
+        var mgr = new ConfigManager();
+        var name = "ExportTest_" + Guid.NewGuid().ToString("N")[..8];
+        var config = mgr.CreateProfile(name);
+        config.AutoClickIntervalMs = 250;
+        config.AutoClickKeyCode = 0x2D;
+        mgr.SaveProfile(config);
+
+        var exportPath = Path.GetTempFileName() + ".keymuse-profile";
+        try
+        {
+            mgr.ExportProfile(name, exportPath);
+            Assert.True(File.Exists(exportPath));
+
+            mgr.DeleteProfile(name);
+            var imported = mgr.ImportProfile(exportPath);
+            Assert.NotNull(imported);
+            Assert.Equal(name, imported.Name);
+            Assert.Equal(250, imported.AutoClickIntervalMs);
+            Assert.Equal(0x2D, imported.AutoClickKeyCode);
+        }
+        finally
+        {
+            if (File.Exists(exportPath)) File.Delete(exportPath);
+        }
+    }
+
+    [Fact]
+    public void ImportNonExistentFile_ReturnsNull()
+    {
+        var mgr = new ConfigManager();
+        var result = mgr.ImportProfile("C:\\NonExistent_File.keymuse-profile");
+        Assert.Null(result);
+    }
 }
