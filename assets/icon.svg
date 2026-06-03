@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#16213e"/>
+    </linearGradient>
+    <linearGradient id="keyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2d2d5e"/>
+      <stop offset="100%" stop-color="#1a1a3e"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="100%" stop-color="#7b2ff7"/>
+    </linearGradient>
+    <linearGradient id="keyTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a3a7a"/>
+      <stop offset="100%" stop-color="#25255a"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+    <filter id="innerGlow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- App icon background -->
+  <rect x="32" y="32" width="448" height="448" rx="96" ry="96" fill="url(#bg)" filter="url(#shadow)"/>
+
+  <!-- Subtle border -->
+  <rect x="32" y="32" width="448" height="448" rx="96" ry="96" fill="none" stroke="url(#glow)" stroke-width="2" opacity="0.3"/>
+
+  <!-- Keycap body -->
+  <rect x="116" y="156" width="280" height="240" rx="24" ry="24" fill="url(#keyGrad)" stroke="#4444aa" stroke-width="2"/>
+
+  <!-- Keycap top face (3D effect) -->
+  <rect x="128" y="168" width="256" height="100" rx="16" ry="16" fill="url(#keyTop)" stroke="#5555cc" stroke-width="1.5"/>
+
+  <!-- Keycap shine -->
+  <rect x="140" y="176" width="120" height="40" rx="8" ry="8" fill="white" opacity="0.06"/>
+
+  <!-- Letter K -->
+  <text x="256" y="278" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="160" font-weight="700" text-anchor="middle" fill="url(#glow)" filter="url(#innerGlow)">K</text>
+
+  <!-- Mouse cursor icon integrated into K -->
+  <g transform="translate(310, 290)" fill="none" stroke="url(#glow)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Cursor arrow -->
+    <polygon points="0,0 28,-8 16,12" fill="url(#glow)" stroke="none"/>
+    <polygon points="28,-8 4,28 16,12" fill="none" stroke="url(#glow)" stroke-width="4"/>
+  </g>
+
+  <!-- Bottom accent line -->
+  <rect x="176" y="400" width="160" height="3" rx="1.5" ry="1.5" fill="url(#glow)" opacity="0.6"/>
+
+  <!-- Corner dots decoration -->
+  <circle cx="168" cy="172" r="4" fill="#00d4ff" opacity="0.4"/>
+  <circle cx="344" cy="172" r="4" fill="#7b2ff7" opacity="0.4"/>
+  <circle cx="168" cy="380" r="4" fill="#00d4ff" opacity="0.4"/>
+  <circle cx="344" cy="380" r="4" fill="#7b2ff7" opacity="0.4"/>
+
+  <!-- Grid dots subtle pattern -->
+  <g fill="#ffffff" opacity="0.03">
+    <circle cx="72" cy="72" r="2"/>
+    <circle cx="72" cy="144" r="2"/>
+    <circle cx="72" cy="216" r="2"/>
+    <circle cx="144" cy="72" r="2"/>
+    <circle cx="216" cy="72" r="2"/>
+    <circle cx="72" cy="368" r="2"/>
+    <circle cx="72" cy="440" r="2"/>
+    <circle cx="144" cy="440" r="2"/>
+    <circle cx="368" cy="72" r="2"/>
+    <circle cx="440" cy="72" r="2"/>
+    <circle cx="440" cy="144" r="2"/>
+    <circle cx="440" cy="216" r="2"/>
+    <circle cx="440" cy="368" r="2"/>
+    <circle cx="440" cy="440" r="2"/>
+    <circle cx="368" cy="440" r="2"/>
+  </g>
+</svg>

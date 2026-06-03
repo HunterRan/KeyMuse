@@ -5,7 +5,8 @@
         WindowStyle="None" AllowsTransparency="True" Background="#CC222222"
         Topmost="True" ShowInTaskbar="False"
         ResizeMode="NoResize"
-        WindowStartupLocation="Manual">
+        WindowStartupLocation="Manual"
+        Icon="KeyMuse.ico">
     <Grid Margin="6">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

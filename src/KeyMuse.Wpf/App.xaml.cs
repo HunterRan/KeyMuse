@@ -47,8 +47,7 @@ public partial class App : System.Windows.Application
     {
         _trayIcon = new Forms.NotifyIcon
         {
-            Icon = System.Drawing.Icon.ExtractAssociatedIcon(
-                Environment.ProcessPath ?? "KeyMuse.Wpf.exe"),
+            Icon = LoadAppIcon(),
             Text = "KeyMuse - 键鼠自动化",
             Visible = true
         };
@@ -70,6 +69,21 @@ public partial class App : System.Windows.Application
         }
         _mainWindow.Show();
         _mainWindow.Activate();
+    }
+
+    private static System.Drawing.Icon LoadAppIcon()
+    {
+        var path = Environment.ProcessPath;
+        if (path != null)
+        {
+            try
+            {
+                var icon = System.Drawing.Icon.ExtractAssociatedIcon(path);
+                if (icon != null) return icon;
+            }
+            catch { }
+        }
+        return System.Drawing.Icon.ExtractAssociatedIcon("KeyMuse.Wpf.exe")!;
     }
 
     public static bool IsRunningAsAdmin()
