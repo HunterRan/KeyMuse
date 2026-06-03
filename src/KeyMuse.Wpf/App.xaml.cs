@@ -1,0 +1,82 @@
+using System.Windows;
+using Forms = System.Windows.Forms;
+using KeyMuse.Core.Services;
+
+namespace KeyMuse.Wpf;
+
+public partial class App : System.Windows.Application
+{
+    private Forms.NotifyIcon? _trayIcon;
+    private MainWindow? _mainWindow;
+    private HUDWindow? _hudWindow;
+
+    public HookManager HookManager { get; } = new();
+    public InputCoordinator Coordinator { get; } = new();
+    public Recorder Recorder { get; }
+    public ReplayEngine ReplayEngine { get; }
+    public AutoClicker AutoClicker { get; }
+    public ConfigManager ConfigManager { get; } = new();
+    public StatusMessageQueue MessageQueue { get; } = new();
+
+    public App()
+    {
+        Recorder = new Recorder(HookManager);
+        ReplayEngine = new ReplayEngine(Coordinator);
+        AutoClicker = new AutoClicker(Coordinator);
+
+        Recorder.OnStatusChanged += msg => MessageQueue.Enqueue(msg);
+        ReplayEngine.OnStatusChanged += msg => MessageQueue.Enqueue(msg);
+        AutoClicker.OnStatusChanged += msg => MessageQueue.Enqueue(msg);
+    }
+
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+        SetupTrayIcon();
+        HookManager.Start();
+
+        _hudWindow = new HUDWindow(this);
+        _hudWindow.Show();
+
+        _mainWindow = new MainWindow(this);
+    }
+
+    private void SetupTrayIcon()
+    {
+        _trayIcon = new Forms.NotifyIcon
+        {
+            Icon = System.Drawing.Icon.ExtractAssociatedIcon(
+                Environment.ProcessPath ?? "KeyMuse.Wpf.exe"),
+            Text = "KeyMuse - 键鼠自动化",
+            Visible = true
+        };
+
+        var menu = new Forms.ContextMenuStrip();
+        menu.Items.Add("打开主面板", null, (_, _) => ShowMainWindow());
+        menu.Items.Add(new Forms.ToolStripSeparator());
+        menu.Items.Add("退出", null, (_, _) => ShutdownApp());
+
+        _trayIcon.ContextMenuStrip = menu;
+        _trayIcon.DoubleClick += (_, _) => ShowMainWindow();
+    }
+
+    private void ShowMainWindow()
+    {
+        if (_mainWindow == null || !_mainWindow.IsVisible)
+        {
+            _mainWindow = new MainWindow(this);
+        }
+        _mainWindow.Show();
+        _mainWindow.Activate();
+    }
+
+    private void ShutdownApp()
+    {
+        Recorder.StopRecordingAsync().ConfigureAwait(false);
+        ReplayEngine.Stop();
+        AutoClicker.Stop();
+        HookManager.Stop();
+        _trayIcon?.Dispose();
+        Current.Shutdown();
+    }
+}

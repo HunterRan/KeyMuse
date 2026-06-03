@@ -1,0 +1,36 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.log
+*.tmp
+*.vs/
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]64/
+[Aa][Rr][Mm]/
+bld/
+
+# NuGet
+*.nupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+
+# publish outputs
+publish/
+
+# IDE
+.idea/
+*.sln.DotSettings.user
+.vscode/
+
+# OS
+Thumbs.db
+.DS_Store
