@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using KeyMuse.Core.Models;
 using KeyMuse.Core.Services;
+using KeyMuse.Wpf.Controls;
 
 namespace KeyMuse.Wpf.Pages;
 
@@ -59,7 +60,7 @@ public partial class RecordingsPage : System.Windows.Controls.UserControl
     {
         var cat = CategoryList.SelectedItem as string;
         if (cat == null) return;
-        if (System.Windows.MessageBox.Show($"确定删除分类「{cat}」及其所有录制？", "确认", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+        if (DarkMessageBox.Show($"确定删除分类「{cat}」及其所有录制？", "确认", DarkMessageBoxButton.YesNo, DarkMessageBoxIcon.Warning) == true)
         {
             _app.RecordingManager.DeleteCategory(cat);
             LoadCategories();
@@ -72,7 +73,7 @@ public partial class RecordingsPage : System.Windows.Controls.UserControl
         var cat = CategoryList.SelectedItem as string;
         if (cat == null)
         {
-            System.Windows.MessageBox.Show("请先选择一个分类", "提示");
+            DarkMessageBox.Show("请先选择一个分类", "提示", DarkMessageBoxIcon.Info);
             return;
         }
 
@@ -97,20 +98,20 @@ public partial class RecordingsPage : System.Windows.Controls.UserControl
     {
         if (_selectedRecording == null)
         {
-            System.Windows.MessageBox.Show("请先选择一个录制文件", "提示");
+            DarkMessageBox.Show("请先选择一个录制文件", "提示", DarkMessageBoxIcon.Info);
             return;
         }
 
         if (!System.IO.File.Exists(_selectedRecording.FilePath))
         {
-            System.Windows.MessageBox.Show("录制文件不存在", "错误");
+            DarkMessageBox.Show("录制文件不存在", "错误", DarkMessageBoxIcon.Error);
             return;
         }
 
         var session = await _app.Recorder.LoadSessionAsync(_selectedRecording.FilePath);
         if (session == null)
         {
-            System.Windows.MessageBox.Show("无法加载录制文件", "错误");
+            DarkMessageBox.Show("无法加载录制文件", "错误", DarkMessageBoxIcon.Error);
             return;
         }
 
@@ -141,7 +142,7 @@ public partial class RecordingsPage : System.Windows.Controls.UserControl
         var cat = CategoryList.SelectedItem as string;
         if (cat == null)
         {
-            System.Windows.MessageBox.Show("请先选择一个分类", "提示");
+            DarkMessageBox.Show("请先选择一个分类", "提示", DarkMessageBoxIcon.Info);
             return;
         }
 
@@ -175,7 +176,7 @@ public partial class RecordingsPage : System.Windows.Controls.UserControl
     private void DeleteBtn_Click(object sender, RoutedEventArgs e)
     {
         if (_selectedRecording == null) return;
-        if (System.Windows.MessageBox.Show($"确定删除「{_selectedRecording.FileName}」？", "确认", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+        if (DarkMessageBox.Show($"确定删除「{_selectedRecording.FileName}」？", "确认", DarkMessageBoxButton.YesNo, DarkMessageBoxIcon.Warning) == true)
         {
             _app.RecordingManager.DeleteRecording(_selectedRecording.FilePath);
             if (_currentCategory != null) LoadRecordings(_currentCategory);

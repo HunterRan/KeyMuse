@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using KeyMuse.Core.Models;
+using KeyMuse.Wpf.Controls;
 
 namespace KeyMuse.Wpf.Pages;
 
@@ -80,7 +81,7 @@ public partial class SettingsPage : System.Windows.Controls.UserControl
             _currentProfile.AutoClickKeyCode = System.Convert.ToInt32(tag, 16);
 
         _app.ConfigManager.SaveProfile(_currentProfile);
-        System.Windows.MessageBox.Show("设置已保存", "KeyMuse");
+        DarkMessageBox.Show("设置已保存", "KeyMuse", DarkMessageBoxIcon.Info);
     }
 
     private void ResetBtn_Click(object sender, RoutedEventArgs e)
@@ -91,6 +92,6 @@ public partial class SettingsPage : System.Windows.Controls.UserControl
         _currentProfile.AutoClickToggleMode = true;
         _app.ConfigManager.SaveProfile(_currentProfile);
         LoadProfileSettings();
-        System.Windows.MessageBox.Show("已恢复默认设置", "KeyMuse");
+        DarkMessageBox.Show("已恢复默认设置", "KeyMuse", DarkMessageBoxIcon.Info);
     }
 }

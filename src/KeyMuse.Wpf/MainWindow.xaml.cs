@@ -38,6 +38,21 @@ public partial class MainWindow : Window
         }
     }
 
+    private void MinBtn_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void MaxBtn_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+    }
+
+    private void CloseBtn_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
     protected override void OnClosed(EventArgs e)
     {
         if (_app?.HookManager != null)

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using KeyMuse.Core.Models;
 using KeyMuse.Core.Services;
+using KeyMuse.Wpf.Controls;
 
 namespace KeyMuse.Wpf.Pages;
 
@@ -87,7 +88,7 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
     private void DeleteWorkflow_Click(object sender, RoutedEventArgs e)
     {
         if (_currentWorkflow == null) return;
-        if (System.Windows.MessageBox.Show($"确定删除工作流「{_currentWorkflow.Name}」？", "确认", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+        if (DarkMessageBox.Show($"确定删除工作流「{_currentWorkflow.Name}」？", "确认", DarkMessageBoxButton.YesNo, DarkMessageBoxIcon.Warning) == true)
         {
             _app.WorkflowManager.DeleteWorkflow(_currentWorkflow.Name);
             _currentWorkflow = null;

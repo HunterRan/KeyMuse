@@ -2,44 +2,82 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:pages="clr-namespace:KeyMuse.Wpf.Pages"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="KeyMuse" Height="560" Width="720"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgBrush}"
-        Foreground="{StaticResource TextBrush}">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+        Foreground="{StaticResource TextBrush}"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        TextOptions.TextFormattingMode="Display"
+        UseLayoutRounding="True">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="34" GlassFrameThickness="0" ResizeBorderThickness="5" UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="34"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0 0 0 1" Padding="8">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Label Grid.Column="0" Content="配置：" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
-                <ComboBox Grid.Column="1" x:Name="ProfileCombo" Margin="4" MinWidth="150"/>
-                <Button Grid.Column="2" Content="+ 新建" Margin="4" Padding="8 2" Click="NewProfile_Click"/>
-            </Grid>
-        </Border>
+            <!-- Title Bar -->
+            <Border Grid.Row="0" Background="{StaticResource StatusBarBrush}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="KeyMuse" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" Margin="12 0" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="0" Text="  — 键鼠自动化" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="76 0 0 0" VerticalAlignment="Center"/>
+                    <WrapPanel Grid.Column="2" VerticalAlignment="Center" Margin="0 0 4 0">
+                        <Button x:Name="MinBtn" Width="36" Height="28" Padding="0" Click="MinBtn_Click" ToolTip="最小化" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                            <TextBlock Text="─" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                        <Button x:Name="MaxBtn" Width="36" Height="28" Padding="0" Click="MaxBtn_Click" ToolTip="最大化" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                            <TextBlock Text="□" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                        <Button x:Name="CloseBtn" Width="36" Height="28" Padding="0" Click="CloseBtn_Click" ToolTip="关闭" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                            <TextBlock Text="✕" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                    </WrapPanel>
+                </Grid>
+            </Border>
 
-        <TabControl Grid.Row="1" Margin="0" BorderThickness="0">
-            <TabItem Header="录制管理" FontSize="13">
-                <pages:RecordingsPage/>
-            </TabItem>
-            <TabItem Header="工作流" FontSize="13">
-                <pages:WorkflowsPage/>
-            </TabItem>
-            <TabItem Header="设置" FontSize="13">
-                <pages:SettingsPage/>
-            </TabItem>
-        </TabControl>
+            <!-- Profile Bar -->
+            <Border Grid.Row="1" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0 0 0 1" Padding="8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0" Content="配置：" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <ComboBox Grid.Column="1" x:Name="ProfileCombo" Margin="4" MinWidth="150"/>
+                    <Button Grid.Column="2" Content="+ 新建" Margin="4" Padding="8 2" Click="NewProfile_Click"/>
+                </Grid>
+            </Border>
 
-        <StatusBar Grid.Row="2" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0 1 0 0">
-            <StatusBarItem x:Name="StatusItem" Content="就绪"/>
-        </StatusBar>
-    </Grid>
+            <!-- Tabs -->
+            <TabControl Grid.Row="2" Margin="0" BorderThickness="0">
+                <TabItem Header="录制管理" FontSize="13">
+                    <pages:RecordingsPage/>
+                </TabItem>
+                <TabItem Header="工作流" FontSize="13">
+                    <pages:WorkflowsPage/>
+                </TabItem>
+                <TabItem Header="设置" FontSize="13">
+                    <pages:SettingsPage/>
+                </TabItem>
+            </TabControl>
+
+            <!-- Status Bar -->
+            <StatusBar Grid.Row="3" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0 1 0 0">
+                <StatusBarItem x:Name="StatusItem" Content="就绪"/>
+            </StatusBar>
+        </Grid>
+    </Border>
 </Window>
