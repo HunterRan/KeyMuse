@@ -5,15 +5,13 @@ namespace KeyMuse.Core.Services;
 
 public class WorkflowManager
 {
-    private readonly string _baseDir;
+    private string _baseDir;
 
     public string BaseDir => _baseDir;
 
     public WorkflowManager()
     {
-        _baseDir = System.IO.Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "KeyMuse", "workflows");
+        _baseDir = GetDefaultBaseDir();
         System.IO.Directory.CreateDirectory(_baseDir);
     }
 
@@ -21,6 +19,19 @@ public class WorkflowManager
     {
         _baseDir = customBaseDir;
         System.IO.Directory.CreateDirectory(_baseDir);
+    }
+
+    public void SetStorageRoot(string root)
+    {
+        _baseDir = System.IO.Path.Combine(root, "workflows");
+        System.IO.Directory.CreateDirectory(_baseDir);
+    }
+
+    private static string GetDefaultBaseDir()
+    {
+        return System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "KeyMuse", "workflows");
     }
 
     public string[] ListWorkflowNames()

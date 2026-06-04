@@ -13,6 +13,7 @@ public class Recorder : IDisposable
     private Task? _flushTask;
     private int _startTick;
     private bool _isRecording;
+    private readonly List<string> _recentEventDescs = new(capacity: 5);
     private readonly string _tempDir;
 
     public bool IsRecording => _isRecording;
@@ -51,6 +52,13 @@ public class Recorder : IDisposable
         if (!_isRecording) return;
         evt.TimeOffsetMs = Environment.TickCount - _startTick;
         _buffer.Enqueue(evt);
+
+        lock (_recentEventDescs)
+        {
+            _recentEventDescs.Add(evt.Description);
+            if (_recentEventDescs.Count > 5)
+                _recentEventDescs.RemoveAt(0);
+        }
     }
 
     private async Task FlushLoop(CancellationToken token)
@@ -58,10 +66,18 @@ public class Recorder : IDisposable
         while (!token.IsCancellationRequested)
         {
             await Task.Delay(100, token);
+            string[]? snapshot;
+            lock (_recentEventDescs)
+            {
+                snapshot = _recentEventDescs.Count > 0 ? _recentEventDescs.ToArray() : null;
+            }
             OnStatusChanged?.Invoke(new StatusMessage
             {
                 Type = StatusMessageType.Recording,
                 Text = $"录制中 - 已捕获 {_buffer.Count} 个事件",
+                Detail = snapshot?.LastOrDefault() ?? "",
+                RecentEvents = snapshot,
+                RecentEventIndex = (snapshot?.Length ?? 1) - 1,
                 ProgressCurrent = _buffer.Count,
                 ProgressTotal = 0
             });

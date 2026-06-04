@@ -1,19 +1,22 @@
 <Window x:Class="KeyMuse.Wpf.HUDWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="KeyMuse HUD" Height="60" Width="240"
+        Title="KeyMuse HUD" Height="140" Width="480"
         WindowStyle="None" AllowsTransparency="True" Background="#CC222222"
         Topmost="True" ShowInTaskbar="False"
         ResizeMode="NoResize"
         WindowStartupLocation="Manual">
-    <Grid Margin="6">
+    <Grid Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" x:Name="StatusText" Foreground="#EEE" FontSize="14"
+        <TextBlock Grid.Row="0" x:Name="StatusText" Foreground="#EEE" FontSize="16"
                    FontFamily="Segoe UI" Text="空闲" TextTrimming="CharacterEllipsis"/>
         <TextBlock Grid.Row="1" x:Name="ProgressText" Foreground="#AAA" FontSize="11"
                    FontFamily="Segoe UI" Text=""/>
+        <TextBlock Grid.Row="2" x:Name="EventListText" Margin="0,4,0,0"
+                   FontFamily="Consolas" FontSize="11" TextWrapping="NoWrap"/>
     </Grid>
 </Window>

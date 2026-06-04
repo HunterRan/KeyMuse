@@ -18,6 +18,13 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
         InitializeComponent();
         _app = (App)System.Windows.Application.Current;
         StepList.ItemsSource = _steps;
+        RepeatModeCombo.SelectionChanged += (_, _) =>
+        {
+            var isCount = RepeatModeCombo.SelectedIndex == 1;
+            RepeatCountLabel.Visibility = isCount ? Visibility.Visible : Visibility.Collapsed;
+            RepeatCountBox.Visibility = isCount ? Visibility.Visible : Visibility.Collapsed;
+            RepeatCountSuffix.Visibility = isCount ? Visibility.Visible : Visibility.Collapsed;
+        };
         LoadWorkflows();
     }
 
@@ -32,8 +39,21 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
         if (WorkflowList.SelectedItem is WorkflowModel wf)
         {
             _currentWorkflow = wf;
+            _app.SelectedWorkflow = wf;
             RefreshSteps();
-            RepeatCountBox.Text = wf.TotalCount.ToString();
+            if (wf.TotalCount <= 0)
+                RepeatModeCombo.SelectedIndex = 2;
+            else if (wf.TotalCount == 1)
+                RepeatModeCombo.SelectedIndex = 0;
+            else
+            {
+                RepeatModeCombo.SelectedIndex = 1;
+                RepeatCountBox.Text = wf.TotalCount.ToString();
+            }
+        }
+        else
+        {
+            _app.SelectedWorkflow = null;
         }
     }
 
@@ -48,7 +68,8 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
             {
                 Index = i + 1,
                 FilePath = step.RecordingFilePath,
-                Count = step.Count
+                Count = step.Count,
+                IntervalMs = step.IntervalMs
             });
         }
     }
@@ -62,10 +83,16 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
             _currentWorkflow.Steps.Add(new WorkflowStep
             {
                 RecordingFilePath = vm.FilePath,
-                Count = vm.Count
+                Count = vm.Count,
+                IntervalMs = vm.IntervalMs
             });
         }
-        _currentWorkflow.TotalCount = int.TryParse(RepeatCountBox.Text, out var n) ? n : 1;
+        _currentWorkflow.TotalCount = RepeatModeCombo.SelectedIndex switch
+        {
+            2 => -1,
+            1 => int.TryParse(RepeatCountBox.Text, out var n) ? n : 1,
+            _ => 1
+        };
         _app.WorkflowManager.SaveWorkflow(_currentWorkflow);
     }
 
@@ -99,17 +126,14 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
 
     private void AddStep_Click(object sender, RoutedEventArgs e)
     {
-        var dlg = new Microsoft.Win32.OpenFileDialog
-        {
-            Filter = "KeyMuse录制 (*.keymuse)|*.keymuse",
-            Title = "选择录制文件"
-        };
-        if (dlg.ShowDialog() == true)
+        if (_currentWorkflow == null) { DarkMessageBox.Show("请先选择一个工作流", "提示", DarkMessageBoxIcon.Info); return; }
+        var dlg = new RecordingBrowserDialog();
+        if (dlg.ShowDialog() == true && dlg.SelectedFilePath != null)
         {
             _steps.Add(new StepViewModel
             {
                 Index = _steps.Count + 1,
-                FilePath = dlg.FileName,
+                FilePath = dlg.SelectedFilePath,
                 Count = 1
             });
             SaveCurrentWorkflow();
@@ -119,6 +143,7 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
 
     private void RemoveStep_Click(object sender, RoutedEventArgs e)
     {
+        if (_currentWorkflow == null) { DarkMessageBox.Show("请先选择一个工作流", "提示", DarkMessageBoxIcon.Info); return; }
         if (StepList.SelectedItem is StepViewModel vm)
         {
             _steps.Remove(vm);
@@ -129,6 +154,7 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
 
     private void MoveUp_Click(object sender, RoutedEventArgs e)
     {
+        if (_currentWorkflow == null) { DarkMessageBox.Show("请先选择一个工作流", "提示", DarkMessageBoxIcon.Info); return; }
         if (StepList.SelectedItem is StepViewModel vm)
         {
             var idx = _steps.IndexOf(vm);
@@ -143,6 +169,7 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
 
     private void MoveDown_Click(object sender, RoutedEventArgs e)
     {
+        if (_currentWorkflow == null) { DarkMessageBox.Show("请先选择一个工作流", "提示", DarkMessageBoxIcon.Info); return; }
         if (StepList.SelectedItem is StepViewModel vm)
         {
             var idx = _steps.IndexOf(vm);
@@ -157,7 +184,7 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
 
     private async void RunBtn_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentWorkflow == null) return;
+        if (_currentWorkflow == null) { DarkMessageBox.Show("请先选择一个工作流", "提示", DarkMessageBoxIcon.Info); return; }
         SaveCurrentWorkflow();
 
         RunBtn.IsEnabled = false;
@@ -189,7 +216,10 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
             if (progress.IsCompleted)
                 ExecStatus.Text = "✓ 执行完成";
             else if (progress.IsRunning)
-                ExecStatus.Text = $"步骤 {progress.CurrentStepIndex + 1}/{progress.TotalSteps} · 总进度 {progress.CurrentOverallCount}/{progress.TotalOverallCount}";
+            {
+                var totalDisplay = progress.TotalOverallCount <= 0 ? "∞" : progress.TotalOverallCount.ToString();
+                ExecStatus.Text = $"步骤 {progress.CurrentStepIndex + 1}/{progress.TotalSteps} · 总进度 {progress.CurrentOverallCount}/{totalDisplay}";
+            }
             else if (!string.IsNullOrEmpty(progress.ErrorMessage))
                 ExecStatus.Text = "✗ " + progress.ErrorMessage;
         });
@@ -202,14 +232,31 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
 
     private void StopExecBtn_Click(object sender, RoutedEventArgs e)
     {
+        if (_currentWorkflow == null) { DarkMessageBox.Show("请先选择一个工作流", "提示", DarkMessageBoxIcon.Info); return; }
         _app.WorkflowExecutor.Stop();
         ExecStatus.Text = "已停止";
     }
 }
 
-public class StepViewModel
+public class StepViewModel : System.ComponentModel.INotifyPropertyChanged
 {
     public int Index { get; set; }
     public string FilePath { get; set; } = "";
-    public int Count { get; set; }
+    public string DisplayName => System.IO.Path.GetFileNameWithoutExtension(FilePath);
+
+    private int _count = 1;
+    public int Count
+    {
+        get => _count;
+        set { _count = value; PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Count))); }
+    }
+
+    private int _intervalMs;
+    public int IntervalMs
+    {
+        get => _intervalMs;
+        set { _intervalMs = value; PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(IntervalMs))); }
+    }
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
 }

@@ -34,6 +34,10 @@ public partial class App : System.Windows.Application
     private HUDWindow? _hudWindow;
     private HotKeyManager? _hotKeyManager;
     private string? _lastRecordingPath;
+    private string? _f6RecordingCategory;
+
+    public string? SelectedRecordingPath { get; set; }
+    public Core.Models.WorkflowModel? SelectedWorkflow { get; set; }
 
     public HookManager HookManager { get; } = new();
     public InputCoordinator Coordinator { get; } = new();
@@ -45,6 +49,7 @@ public partial class App : System.Windows.Application
     public RecordingManager RecordingManager { get; } = new();
     public WorkflowManager WorkflowManager { get; } = new();
     public WorkflowExecutor WorkflowExecutor { get; }
+    public string CurrentTheme { get; private set; } = "Dark";
 
     public App()
     {
@@ -56,6 +61,45 @@ public partial class App : System.Windows.Application
         Recorder.OnStatusChanged += msg => MessageQueue.Enqueue(msg);
         ReplayEngine.OnStatusChanged += msg => MessageQueue.Enqueue(msg);
         AutoClicker.OnStatusChanged += msg => MessageQueue.Enqueue(msg);
+    }
+
+    private void ApplyProfileSettings()
+    {
+        var profiles = ConfigManager.ListProfiles();
+        if (profiles.Length > 0)
+        {
+            var firstProfile = ConfigManager.LoadProfile(profiles[0]);
+            if (firstProfile != null)
+            {
+                if (!string.IsNullOrEmpty(firstProfile.StorageRoot))
+                {
+                    ConfigManager.SetStorageRoot(firstProfile.StorageRoot);
+                    RecordingManager.SetStorageRoot(firstProfile.StorageRoot);
+                    WorkflowManager.SetStorageRoot(firstProfile.StorageRoot);
+                }
+                SwitchTheme(firstProfile.Theme);
+            }
+        }
+    }
+
+    public void SwitchTheme(string themeName)
+    {
+        if (themeName == CurrentTheme) return;
+        CurrentTheme = themeName;
+
+        var uri = themeName switch
+        {
+            "Light" => new Uri("Themes/Light.xaml", UriKind.Relative),
+            "Gray" => new Uri("Themes/Gray.xaml", UriKind.Relative),
+            _ => new Uri("Themes/Dark.xaml", UriKind.Relative)
+        };
+
+        var dict = new ResourceDictionary { Source = uri };
+
+        if (Resources.MergedDictionaries.Count > 0)
+            Resources.MergedDictionaries[0] = dict;
+        else
+            Resources.MergedDictionaries.Add(dict);
     }
 
     protected override void OnStartup(StartupEventArgs e)
@@ -75,13 +119,15 @@ public partial class App : System.Windows.Application
 
             _hotKeyManager = new HotKeyManager();
             _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F6, OnF6Record);
-            _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F7, OnF7Replay);
-            _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F8, OnF8AutoClick);
-            _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F9, OnF9StopAll);
+            _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F7, OnF7ReplayRecording);
+            _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F8, OnF8ReplayWorkflow);
+            _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F9, OnF9AutoClick);
             _hotKeyManager.RegisterHotKey(System.Windows.Input.Key.F10, OnF10ToggleUI);
 
             _hudWindow = new HUDWindow(this);
             _hudWindow.Show();
+
+            ApplyProfileSettings();
 
             ShowMainWindow();
         }
@@ -115,6 +161,8 @@ public partial class App : System.Windows.Application
         if (_mainWindow == null || !_mainWindow.IsVisible)
         {
             _mainWindow = new MainWindow(this);
+            _mainWindow.SourceInitialized += (_, _) =>
+                Helpers.AcrylicHelper.TryEnableAcrylic(_mainWindow);
         }
         _mainWindow.Show();
         _mainWindow.Activate();
@@ -155,14 +203,24 @@ public partial class App : System.Windows.Application
         Current.Shutdown();
     }
 
-    private void OnF6Record()
+    private async void OnF6Record()
     {
         if (Recorder.IsRecording)
         {
-            _ = Recorder.StopRecordingAsync().ContinueWith(t =>
+            var tempPath = await Recorder.StopRecordingAsync();
+            if (tempPath != null)
             {
-                if (t.IsCompletedSuccessfully && t.Result != null) _lastRecordingPath = t.Result;
-            });
+                var cat = _f6RecordingCategory ?? "未分类";
+                var saved = RecordingManager.SaveRecording(tempPath, cat);
+                var nameDlg = new Pages.TextInputDialog("保存录制", "录制名称（留空使用默认名称）：");
+                if (nameDlg.ShowDialog() == true && !string.IsNullOrWhiteSpace(nameDlg.Answer))
+                {
+                    try { RecordingManager.RenameRecording(saved, nameDlg.Answer.Trim()); }
+                    catch { }
+                }
+                _lastRecordingPath = saved;
+                _f6RecordingCategory = null;
+            }
             MessageQueue.Enqueue(new Core.Models.StatusMessage
             {
                 Type = Core.Models.StatusMessageType.Idle,
@@ -171,16 +229,20 @@ public partial class App : System.Windows.Application
         }
         else
         {
+            var dlg = new Controls.CategoryPickerDialog();
+            if (dlg.ShowDialog() != true || string.IsNullOrWhiteSpace(dlg.SelectedCategory))
+                return;
+            _f6RecordingCategory = dlg.SelectedCategory;
             Recorder.StartRecording();
             MessageQueue.Enqueue(new Core.Models.StatusMessage
             {
                 Type = Core.Models.StatusMessageType.Recording,
-                Text = "F6: 开始录制"
+                Text = $"F6: 开始录制 (分类: {_f6RecordingCategory})"
             });
         }
     }
 
-    private async void OnF7Replay()
+    private async void OnF7ReplayRecording()
     {
         if (ReplayEngine.IsPlaying)
         {
@@ -193,28 +255,21 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        var path = _lastRecordingPath;
-        if (path == null || !File.Exists(path))
+        var path = SelectedRecordingPath;
+        if (string.IsNullOrEmpty(path) || !File.Exists(path))
         {
-            MessageQueue.Enqueue(new Core.Models.StatusMessage
-            {
-                Type = Core.Models.StatusMessageType.Error,
-                Text = "F7: 无可用录制文件"
-            });
+            Controls.DarkMessageBox.Show("请在录制页面先选中一个录制文件", "提示", Controls.DarkMessageBoxIcon.Info);
             return;
         }
 
         var session = await Recorder.LoadSessionAsync(path!);
         if (session == null)
         {
-            MessageQueue.Enqueue(new Core.Models.StatusMessage
-            {
-                Type = Core.Models.StatusMessageType.Error,
-                Text = "F7: 录制文件无效"
-            });
+            Controls.DarkMessageBox.Show("录制文件无效", "错误", Controls.DarkMessageBoxIcon.Error);
             return;
         }
 
+        if (_mainWindow != null) _mainWindow.WindowState = System.Windows.WindowState.Minimized;
         _ = ReplayEngine.PlayAsync(session, LoopMode.Single);
         MessageQueue.Enqueue(new Core.Models.StatusMessage
         {
@@ -223,7 +278,36 @@ public partial class App : System.Windows.Application
         });
     }
 
-    private void OnF8AutoClick()
+    private async void OnF8ReplayWorkflow()
+    {
+        if (ReplayEngine.IsPlaying)
+        {
+            ReplayEngine.Stop();
+            MessageQueue.Enqueue(new Core.Models.StatusMessage
+            {
+                Type = Core.Models.StatusMessageType.Idle,
+                Text = "F8: 工作流已停止"
+            });
+            return;
+        }
+
+        var wf = SelectedWorkflow;
+        if (wf == null)
+        {
+            Controls.DarkMessageBox.Show("请在工作流页面先选中一个工作流", "提示", Controls.DarkMessageBoxIcon.Info);
+            return;
+        }
+
+        if (_mainWindow != null) _mainWindow.WindowState = System.Windows.WindowState.Minimized;
+        await WorkflowExecutor.ExecuteAsync(wf);
+        MessageQueue.Enqueue(new Core.Models.StatusMessage
+        {
+            Type = Core.Models.StatusMessageType.Idle,
+            Text = "F8: 工作流执行完成"
+        });
+    }
+
+    private void OnF9AutoClick()
     {
         if (AutoClicker.IsRunning)
         {
@@ -231,45 +315,17 @@ public partial class App : System.Windows.Application
             MessageQueue.Enqueue(new Core.Models.StatusMessage
             {
                 Type = Core.Models.StatusMessageType.Idle,
-                Text = "F8: 连点已停止"
+                Text = "F9: 连点已停止"
             });
         }
         else
         {
-            AutoClicker.KeyCode = 0x2D;
+            AutoClicker.KeyCode = -1;
             AutoClicker.Start();
             MessageQueue.Enqueue(new Core.Models.StatusMessage
             {
                 Type = Core.Models.StatusMessageType.AutoClicking,
-                Text = "F8: 开始连点"
-            });
-        }
-    }
-
-    private void OnF9StopAll()
-    {
-        var stopped = false;
-        if (Recorder.IsRecording)
-        {
-            _ = Recorder.StopRecordingAsync();
-            stopped = true;
-        }
-        if (ReplayEngine.IsPlaying)
-        {
-            ReplayEngine.Stop();
-            stopped = true;
-        }
-        if (AutoClicker.IsRunning)
-        {
-            AutoClicker.Stop();
-            stopped = true;
-        }
-        if (stopped)
-        {
-            MessageQueue.Enqueue(new Core.Models.StatusMessage
-            {
-                Type = Core.Models.StatusMessageType.Idle,
-                Text = "F9: 已停止所有任务"
+                Text = "F9: 开始连点"
             });
         }
     }

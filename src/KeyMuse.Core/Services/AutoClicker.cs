@@ -61,9 +61,18 @@ public class AutoClicker
                 using (await _coordinator.AcquireAsync(token))
                 {
                     var sender = _coordinator.Sender;
-                    sender.SendKeyDown(KeyCode);
-                    await Task.Delay(50, token);
-                    sender.SendKeyUp(KeyCode);
+                    if (KeyCode < 0)
+                    {
+                        sender.SendMouseDown(0);
+                        await Task.Delay(50, token);
+                        sender.SendMouseUp(0);
+                    }
+                    else
+                    {
+                        sender.SendKeyDown(KeyCode);
+                        await Task.Delay(50, token);
+                        sender.SendKeyUp(KeyCode);
+                    }
                 }
 
                 ClickCount++;

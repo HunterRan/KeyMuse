@@ -126,14 +126,37 @@ public class ReplayEngine
             SendEvent(sender, evt);
             accumulatedOriginal = evt.TimeOffsetMs;
 
+            var recent = BuildContextWindow(session.Events, i);
+
             OnStatusChanged?.Invoke(new StatusMessage
             {
                 Type = StatusMessageType.Replaying,
                 Text = $"回放中 - 第 {CurrentLoop}/{TotalLoops} 轮",
+                Detail = evt.Description,
+                RecentEvents = recent,
+                RecentEventIndex = 2,
                 ProgressCurrent = CurrentEventIndex,
                 ProgressTotal = TotalEvents
             });
         }
+    }
+
+    private static string[] BuildContextWindow(List<InputEvent> events, int centerIndex)
+    {
+        int total = events.Count;
+        var result = new string[5];
+        int idx = centerIndex - 2;
+
+        for (int j = 0; j < 5; j++)
+        {
+            int pos = idx + j;
+            if (pos < 0 || pos >= total)
+                result[j] = "—";
+            else
+                result[j] = events[pos].Description;
+        }
+
+        return result;
     }
 
     private static void SendEvent(InputSender sender, InputEvent evt)

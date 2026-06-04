@@ -14,6 +14,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0" Text="配置管理" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource TextBrush}" Margin="0 0 0 16"/>
@@ -36,21 +37,14 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <Grid Grid.Row="0" Margin="0 4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="100"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Label Content="按键：" VerticalAlignment="Center"/>
-                        <ComboBox Grid.Column="1" x:Name="ClickKeyCombo" Margin="4" SelectedIndex="0">
-                            <ComboBoxItem Content="Insert" Tag="0x2D"/>
-                            <ComboBoxItem Content="ScrollLock" Tag="0x91"/>
-                            <ComboBoxItem Content="F13" Tag="0x7C"/>
-                            <ComboBoxItem Content="F14" Tag="0x7D"/>
-                            <ComboBoxItem Content="F15" Tag="0x7E"/>
-                        </ComboBox>
+                        <Label Content="按键(VK)：" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" x:Name="ClickKeyBox" Margin="4" Text="0x2D" VerticalAlignment="Center"/>
                     </Grid>
                     <Grid Grid.Row="1" Margin="0 4">
                         <Grid.ColumnDefinitions>
@@ -61,17 +55,6 @@
                         <Label Content="间隔：" VerticalAlignment="Center"/>
                         <TextBox Grid.Column="1" x:Name="ClickIntervalBox" Margin="4" Text="1000"/>
                         <Label Grid.Column="2" Content="ms" VerticalAlignment="Center"/>
-                    </Grid>
-                    <Grid Grid.Row="2" Margin="0 4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="100"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Content="模式：" VerticalAlignment="Center"/>
-                        <ComboBox Grid.Column="1" x:Name="ClickModeCombo" Margin="4" SelectedIndex="1">
-                            <ComboBoxItem Content="按住触发"/>
-                            <ComboBoxItem Content="开关切换"/>
-                        </ComboBox>
                     </Grid>
                 </Grid>
             </GroupBox>
@@ -134,8 +117,19 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <Grid Grid.Row="0" Margin="0 4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="根目录" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" x:Name="StorageRootBox" Margin="4" Text="" VerticalAlignment="Center"/>
+                        <Button Grid.Column="2" Content="浏览" Margin="4" Padding="8 2" Click="BrowseStorageRoot_Click"/>
+                    </Grid>
+                    <Grid Grid.Row="1" Margin="0 4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="100"/>
                             <ColumnDefinition Width="*"/>
@@ -143,7 +137,7 @@
                         <Label Content="录制目录" VerticalAlignment="Top"/>
                         <TextBlock Grid.Column="1" x:Name="RecordingDirText" TextWrapping="Wrap" Margin="4 6" Foreground="{StaticResource TextMutedBrush}"/>
                     </Grid>
-                    <Grid Grid.Row="1" Margin="0 4">
+                    <Grid Grid.Row="2" Margin="0 4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="100"/>
                             <ColumnDefinition Width="*"/>
@@ -151,7 +145,7 @@
                         <Label Content="工作流目录" VerticalAlignment="Top"/>
                         <TextBlock Grid.Column="1" x:Name="WorkflowDirText" TextWrapping="Wrap" Margin="4 6" Foreground="{StaticResource TextMutedBrush}"/>
                     </Grid>
-                    <Grid Grid.Row="2" Margin="0 4">
+                    <Grid Grid.Row="3" Margin="0 4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="100"/>
                             <ColumnDefinition Width="*"/>
@@ -162,12 +156,27 @@
                 </Grid>
             </GroupBox>
 
-            <WrapPanel Grid.Row="5" Margin="0 16">
+            <GroupBox Grid.Row="5" Header="主题" Margin="0 4" Padding="12" BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Content="界面主题" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="1" x:Name="ThemeCombo" Margin="4" SelectedIndex="0" SelectionChanged="ThemeCombo_SelectionChanged">
+                        <ComboBoxItem Content="深色"/>
+                        <ComboBoxItem Content="浅色"/>
+                        <ComboBoxItem Content="灰色"/>
+                    </ComboBox>
+                </Grid>
+            </GroupBox>
+
+            <WrapPanel Grid.Row="6" Margin="0 16">
                 <Button Content="💾 保存设置" Margin="0 0 8 0" Padding="12 4" Click="SaveBtn_Click" Background="{StaticResource AccentBrush}"/>
                 <Button Content="🔄 恢复默认" Padding="12 4" Click="ResetBtn_Click"/>
             </WrapPanel>
 
-            <Border Grid.Row="6" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0 1 0 0" Padding="0 12 0 0" Margin="0 8 0 0">
+            <Border Grid.Row="7" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0 1 0 0" Padding="0 12 0 0" Margin="0 8 0 0">
                 <TextBlock Text="KeyMuse v1.0 — 键鼠自动化工具" Foreground="{StaticResource TextMutedBrush}" FontSize="11"/>
             </Border>
         </Grid>

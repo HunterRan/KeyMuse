@@ -6,7 +6,7 @@ namespace KeyMuse.Core.Services;
 
 public class ConfigManager
 {
-    private readonly string _basePath;
+    private string _basePath;
     private ProfileConfig? _current;
 
     public ProfileConfig? Current => _current;
@@ -17,10 +17,27 @@ public class ConfigManager
 
     public ConfigManager()
     {
-        _basePath = Path.Combine(
+        _basePath = GetDefaultBasePath();
+        Directory.CreateDirectory(_basePath);
+    }
+
+    public ConfigManager(string customBaseDir)
+    {
+        _basePath = Path.Combine(customBaseDir, "profiles");
+        Directory.CreateDirectory(_basePath);
+    }
+
+    public void SetStorageRoot(string root)
+    {
+        _basePath = Path.Combine(root, "profiles");
+        Directory.CreateDirectory(_basePath);
+    }
+
+    private static string GetDefaultBasePath()
+    {
+        return Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "KeyMuse", "profiles");
-        Directory.CreateDirectory(_basePath);
     }
 
     public string[] ListProfiles()

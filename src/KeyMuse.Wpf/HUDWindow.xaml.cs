@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Documents;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace KeyMuse.Wpf;
@@ -68,14 +70,47 @@ public partial class HUDWindow : Window
                 ProgressText.Text = "";
             }
 
+            UpdateEventList(msg.RecentEvents, msg.RecentEventIndex);
+
             Background = msg.Type switch
             {
-                Core.Models.StatusMessageType.Recording => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0xCC, 0x22, 0x66, 0x22)),
-                Core.Models.StatusMessageType.Replaying => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0xCC, 0x22, 0x44, 0x66)),
-                Core.Models.StatusMessageType.AutoClicking => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0xCC, 0x66, 0x66, 0x22)),
-                Core.Models.StatusMessageType.Error => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0xCC, 0x66, 0x22, 0x22)),
-                _ => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0xCC, 0x22, 0x22, 0x22))
+                Core.Models.StatusMessageType.Recording => new SolidColorBrush(Color.FromArgb(0xCC, 0x22, 0x66, 0x22)),
+                Core.Models.StatusMessageType.Replaying => new SolidColorBrush(Color.FromArgb(0xCC, 0x22, 0x44, 0x66)),
+                Core.Models.StatusMessageType.AutoClicking => new SolidColorBrush(Color.FromArgb(0xCC, 0x66, 0x66, 0x22)),
+                Core.Models.StatusMessageType.Error => new SolidColorBrush(Color.FromArgb(0xCC, 0x66, 0x22, 0x22)),
+                _ => new SolidColorBrush(Color.FromArgb(0xCC, 0x22, 0x22, 0x22))
             };
+        }
+    }
+
+    private static readonly Brush HighlightFg = new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0xFF));
+    private static readonly Brush DimFg = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88));
+    private static readonly Brush CurrentMarker = new SolidColorBrush(Color.FromRgb(0x5B, 0xC0, 0xEB));
+
+    private void UpdateEventList(string[]? events, int highlightIndex)
+    {
+        EventListText.Inlines.Clear();
+
+        if (events == null || events.Length == 0)
+            return;
+
+        for (int i = 0; i < events.Length; i++)
+        {
+            bool isHighlight = i == highlightIndex;
+            var prefix = isHighlight ? "▶ " : "  ";
+            var line = events[i];
+
+            if (line == "—")
+            {
+                EventListText.Inlines.Add(new Run("\n"));
+                continue;
+            }
+
+            EventListText.Inlines.Add(new Run(prefix + line + "\n")
+            {
+                Foreground = isHighlight ? HighlightFg : DimFg,
+                FontWeight = isHighlight ? FontWeights.Bold : FontWeights.Normal
+            });
         }
     }
 }

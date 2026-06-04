@@ -39,14 +39,15 @@ public class WorkflowExecutor
 
         try
         {
+            var isInfinite = workflow.TotalCount <= 0;
             var progress = new WorkflowProgress
             {
                 TotalSteps = workflow.Steps.Count,
-                TotalOverallCount = workflow.TotalCount,
+                TotalOverallCount = isInfinite ? -1 : workflow.TotalCount,
                 IsRunning = true
             };
 
-            for (int overall = 0; overall < workflow.TotalCount; overall++)
+            for (int overall = 0; isInfinite || overall < workflow.TotalCount; overall++)
             {
                 progress.CurrentOverallCount = overall + 1;
                 if (_cts.IsCancellationRequested) break;
@@ -86,6 +87,9 @@ public class WorkflowExecutor
 
                         await _replayEngine.PlayAsync(session, LoopMode.Single, 1, 0);
                     }
+
+                    if (step.IntervalMs > 0 && stepIdx < workflow.Steps.Count - 1)
+                        await Task.Delay(step.IntervalMs, _cts.Token);
                 }
             }
 

@@ -1,9 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Color = System.Windows.Media.Color;
-using Brush = System.Windows.Media.Brush;
-using Brushes = System.Windows.Media.Brushes;
 using Application = System.Windows.Application;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using VerticalAlignment = System.Windows.VerticalAlignment;

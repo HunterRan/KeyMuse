@@ -6,15 +6,13 @@ namespace KeyMuse.Core.Services;
 
 public class RecordingManager
 {
-    private readonly string _baseDir;
+    private string _baseDir;
 
     public string BaseDir => _baseDir;
 
     public RecordingManager()
     {
-        _baseDir = System.IO.Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "KeyMuse", "recordings");
+        _baseDir = GetDefaultBaseDir();
         System.IO.Directory.CreateDirectory(_baseDir);
     }
 
@@ -22,6 +20,19 @@ public class RecordingManager
     {
         _baseDir = customBaseDir;
         System.IO.Directory.CreateDirectory(_baseDir);
+    }
+
+    public void SetStorageRoot(string root)
+    {
+        _baseDir = System.IO.Path.Combine(root, "recordings");
+        System.IO.Directory.CreateDirectory(_baseDir);
+    }
+
+    private static string GetDefaultBaseDir()
+    {
+        return System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "KeyMuse", "recordings");
     }
 
     public string[] ListCategories()

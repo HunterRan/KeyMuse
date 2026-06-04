@@ -37,9 +37,46 @@
             <ListView Grid.Row="1" x:Name="StepList" Margin="0 4">
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="步骤" Width="40"/>
-                        <GridViewColumn Header="录制文件" Width="200"/>
-                        <GridViewColumn Header="次数" Width="60"/>
+                        <GridViewColumn Header="步骤" Width="40" DisplayMemberBinding="{Binding Index}"/>
+                        <GridViewColumn Header="录制文件" Width="180" DisplayMemberBinding="{Binding DisplayName}"/>
+                        <GridViewColumn Header="次数" Width="56">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Count, UpdateSourceTrigger=LostFocus}" Width="44" HorizontalAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="TextBox">
+                                                            <ScrollViewer x:Name="PART_ContentHost"/>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="间隔(ms)" Width="80">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding IntervalMs, UpdateSourceTrigger=LostFocus}" Width="68" HorizontalAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="TextBox">
+                                                            <ScrollViewer x:Name="PART_ContentHost"/>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
                     </GridView>
                 </ListView.View>
             </ListView>
@@ -55,16 +92,24 @@
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="70"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="60"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <Label Content="重复：" VerticalAlignment="Center"/>
-                    <TextBox Grid.Column="1" x:Name="RepeatCountBox" Margin="4" Text="1" VerticalAlignment="Center"/>
-                    <Label Grid.Column="2" Content="次" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="3" x:Name="ExecStatus" VerticalAlignment="Center" Margin="8 0" Foreground="{StaticResource AccentBrush}"/>
-                    <WrapPanel Grid.Column="4">
+                    <ComboBox Grid.Column="1" x:Name="RepeatModeCombo" Margin="4" SelectedIndex="0" VerticalAlignment="Center">
+                        <ComboBoxItem Content="单次"/>
+                        <ComboBoxItem Content="N 次"/>
+                        <ComboBoxItem Content="无限"/>
+                    </ComboBox>
+                    <Label Grid.Column="2" Content="次数：" VerticalAlignment="Center" x:Name="RepeatCountLabel" Visibility="Collapsed"/>
+                    <TextBox Grid.Column="3" x:Name="RepeatCountBox" Margin="4" Text="1" VerticalAlignment="Center" Visibility="Collapsed"/>
+                    <Label Grid.Column="4" Content="次" VerticalAlignment="Center" x:Name="RepeatCountSuffix" Visibility="Collapsed"/>
+                    <TextBlock Grid.Column="5" x:Name="ExecStatus" VerticalAlignment="Center" Margin="8 0" Foreground="{StaticResource AccentBrush}"/>
+                    <WrapPanel Grid.Column="6">
                         <Button x:Name="RunBtn" Content="▶ 执行" Margin="0 0 4 0" Padding="12 4" Width="70" Click="RunBtn_Click" Background="{StaticResource AccentBrush}"/>
                         <Button x:Name="StopExecBtn" Content="■ 停止" Padding="12 4" Width="70" Click="StopExecBtn_Click"/>
                     </WrapPanel>

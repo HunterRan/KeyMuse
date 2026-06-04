@@ -11,4 +11,5 @@ public class RecordingInfo
     public string DisplayDuration => DurationMs >= 60000
         ? $"{DurationMs / 60000}m{DurationMs % 60000 / 1000}s"
         : $"{DurationMs / 1000}s";
+    public string DisplayCreatedAt => CreatedAt.ToString("yyyy-MM-dd HH:mm");
 }

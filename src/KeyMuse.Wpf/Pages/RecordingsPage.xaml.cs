@@ -17,7 +17,11 @@ public partial class RecordingsPage : System.Windows.Controls.UserControl
         InitializeComponent();
         _app = (App)System.Windows.Application.Current;
         LoopModeCombo.SelectionChanged += (_, _) =>
-            LoopCountBox.IsEnabled = LoopModeCombo.SelectedIndex == 1;
+        {
+            var isCount = LoopModeCombo.SelectedIndex == 1;
+            LoopCountBox.Visibility = isCount ? Visibility.Visible : Visibility.Collapsed;
+            LoopCountSuffix.Visibility = isCount ? Visibility.Visible : Visibility.Collapsed;
+        };
         LoadCategories();
     }
 
@@ -44,6 +48,9 @@ public partial class RecordingsPage : System.Windows.Controls.UserControl
     private void RecordingList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         _selectedRecording = RecordingList.SelectedItem as RecordingInfo;
+        _app.SelectedRecordingPath = _selectedRecording?.FilePath;
+        if (_selectedRecording == null)
+            _app.SelectedRecordingPath = null;
     }
 
     private void NewCategory_Click(object sender, RoutedEventArgs e)
@@ -88,7 +95,13 @@ public partial class RecordingsPage : System.Windows.Controls.UserControl
             var path = await _app.Recorder.StopRecordingAsync();
             if (path != null)
             {
-                _app.RecordingManager.SaveRecording(path, cat);
+                var saved = _app.RecordingManager.SaveRecording(path, cat);
+                var dlg = new TextInputDialog("保存录制", "录制名称（留空使用默认名称）：");
+                if (dlg.ShowDialog() == true && !string.IsNullOrWhiteSpace(dlg.Answer))
+                {
+                    try { _app.RecordingManager.RenameRecording(saved, dlg.Answer.Trim()); }
+                    catch { }
+                }
                 LoadRecordings(cat);
             }
         }

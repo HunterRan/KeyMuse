@@ -4,6 +4,7 @@ public class WorkflowStep
 {
     public string RecordingFilePath { get; set; } = "";
     public int Count { get; set; } = 1;
+    public int IntervalMs { get; set; }
 }
 
 public class WorkflowModel
