@@ -71,39 +71,47 @@
                     <Grid Grid.Row="0" Margin="0 2">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="100"/>
-                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Label Content="录制开关" VerticalAlignment="Center"/>
+                        <Label Content="录制" VerticalAlignment="Center"/>
                         <Label Grid.Column="1" Content="F6" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"/>
+                        <TextBlock Grid.Column="2" Text="开始/停止，开始前选分类，停止时命名" VerticalAlignment="Center" Margin="8 0 0 0" Foreground="{StaticResource TextMutedBrush}" FontSize="11"/>
                     </Grid>
                     <Grid Grid.Row="1" Margin="0 2">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="100"/>
-                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Label Content="回放" VerticalAlignment="Center"/>
+                        <Label Content="回放录制" VerticalAlignment="Center"/>
                         <Label Grid.Column="1" Content="F7" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"/>
+                        <TextBlock Grid.Column="2" Text="需先在录制页选中文件，自动最小化" VerticalAlignment="Center" Margin="8 0 0 0" Foreground="{StaticResource TextMutedBrush}" FontSize="11"/>
                     </Grid>
                     <Grid Grid.Row="2" Margin="0 2">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="100"/>
-                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Label Content="连点开关" VerticalAlignment="Center"/>
+                        <Label Content="执行工作流" VerticalAlignment="Center"/>
                         <Label Grid.Column="1" Content="F8" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"/>
+                        <TextBlock Grid.Column="2" Text="需先在工作流页选中工作流，自动最小化" VerticalAlignment="Center" Margin="8 0 0 0" Foreground="{StaticResource TextMutedBrush}" FontSize="11"/>
                     </Grid>
                     <Grid Grid.Row="3" Margin="0 2">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="100"/>
-                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Label Content="急停" VerticalAlignment="Center"/>
+                        <Label Content="连点开关" VerticalAlignment="Center"/>
                         <Label Grid.Column="1" Content="F9" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"/>
                     </Grid>
                     <Grid Grid.Row="4" Margin="0 2">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="100"/>
-                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <Label Content="显示/隐藏" VerticalAlignment="Center"/>
                         <Label Grid.Column="1" Content="F10" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"/>
@@ -177,7 +185,7 @@
             </WrapPanel>
 
             <Border Grid.Row="7" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0 1 0 0" Padding="0 12 0 0" Margin="0 8 0 0">
-                <TextBlock Text="KeyMuse v1.0 — 键鼠自动化工具" Foreground="{StaticResource TextMutedBrush}" FontSize="11"/>
+                <TextBlock Text="KeyMuse v0.0.6 — 键鼠自动化工具" Foreground="{StaticResource TextMutedBrush}" FontSize="11"/>
             </Border>
         </Grid>
     </ScrollViewer>
