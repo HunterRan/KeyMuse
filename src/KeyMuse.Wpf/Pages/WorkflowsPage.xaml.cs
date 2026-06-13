@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using KeyMuse.Core.Models;
@@ -13,6 +15,8 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
     private WorkflowModel? _currentWorkflow;
     private ObservableCollection<StepViewModel> _steps = new();
     private int _repeatModeIndex;
+    private FileSystemWatcher? _watcher;
+    private DateTime _lastRefresh = DateTime.MinValue;
 
     public WorkflowsPage()
     {
@@ -28,6 +32,34 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
             RepeatCountSuffix.Visibility = isCount ? Visibility.Visible : Visibility.Collapsed;
         };
         LoadWorkflows();
+        SetupWatcher();
+    }
+
+    private void SetupWatcher()
+    {
+        try
+        {
+            var dir = _app.WorkflowManager.BaseDir;
+            if (!Directory.Exists(dir)) return;
+            _watcher = new FileSystemWatcher(dir, "*.json")
+            {
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
+            };
+            _watcher.Created += OnDiskChanged;
+            _watcher.Deleted += OnDiskChanged;
+            _watcher.Renamed += OnDiskChanged;
+            _watcher.Changed += OnDiskChanged;
+            _watcher.EnableRaisingEvents = true;
+        }
+        catch { }
+    }
+
+    private void OnDiskChanged(object sender, FileSystemEventArgs e)
+    {
+        var now = DateTime.UtcNow;
+        if ((now - _lastRefresh).TotalMilliseconds < 500) return;
+        _lastRefresh = now;
+        Dispatcher.Invoke(LoadWorkflows);
     }
 
     private void LoadWorkflows()

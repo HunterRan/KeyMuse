@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using KeyMuse.Core.Models;
@@ -12,6 +13,8 @@ public partial class RecordingsPage : System.Windows.Controls.UserControl
     private RecordingInfo? _selectedRecording;
     private string? _currentCategory;
     private int _loopModeIndex;
+    private FileSystemWatcher? _watcher;
+    private DateTime _lastRefresh = DateTime.MinValue;
 
     public RecordingsPage()
     {
@@ -37,6 +40,39 @@ public partial class RecordingsPage : System.Windows.Controls.UserControl
         LoopIntervalBox.TextChanged += (_, _) =>
             _app.RecordingLoopIntervalMs = int.TryParse(LoopIntervalBox.Text, out var iv) ? iv : 0;
         LoadCategories();
+        SetupWatcher();
+    }
+
+    private void SetupWatcher()
+    {
+        try
+        {
+            var dir = _app.RecordingManager.BaseDir;
+            if (!Directory.Exists(dir)) return;
+            _watcher = new FileSystemWatcher(dir)
+            {
+                IncludeSubdirectories = true,
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
+            };
+            _watcher.Created += OnDiskChanged;
+            _watcher.Deleted += OnDiskChanged;
+            _watcher.Renamed += OnDiskChanged;
+            _watcher.EnableRaisingEvents = true;
+        }
+        catch { }
+    }
+
+    private void OnDiskChanged(object sender, FileSystemEventArgs e)
+    {
+        var now = DateTime.UtcNow;
+        if ((now - _lastRefresh).TotalMilliseconds < 500) return;
+        _lastRefresh = now;
+        Dispatcher.Invoke(() =>
+        {
+            LoadCategories();
+            if (_currentCategory != null && Directory.Exists(Path.Combine(_app.RecordingManager.BaseDir, _currentCategory)))
+                LoadRecordings(_currentCategory);
+        });
     }
 
     private void LoadCategories()
