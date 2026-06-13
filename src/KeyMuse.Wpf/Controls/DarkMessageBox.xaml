@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="KeyMuse" SizeToContent="WidthAndHeight" MinWidth="320" MaxWidth="480"
         WindowStartupLocation="CenterScreen" ShowInTaskbar="False"
-        ResizeMode="NoResize"
+        Topmost="True" ResizeMode="NoResize"
         Background="Transparent"
         AllowsTransparency="True"
         WindowStyle="None"

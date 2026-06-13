@@ -29,8 +29,6 @@ public class ConfigManager
 
     public void SetStorageRoot(string root)
     {
-        _basePath = Path.Combine(root, "profiles");
-        Directory.CreateDirectory(_basePath);
     }
 
     private static string GetDefaultBasePath()

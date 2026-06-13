@@ -11,6 +11,7 @@ public partial class RecordingsPage : System.Windows.Controls.UserControl
     private readonly App _app;
     private RecordingInfo? _selectedRecording;
     private string? _currentCategory;
+    private int _loopModeIndex;
 
     public RecordingsPage()
     {
@@ -18,10 +19,23 @@ public partial class RecordingsPage : System.Windows.Controls.UserControl
         _app = (App)System.Windows.Application.Current;
         LoopModeCombo.SelectionChanged += (_, _) =>
         {
-            var isCount = LoopModeCombo.SelectedIndex == 1;
+            _loopModeIndex = LoopModeCombo.SelectedIndex;
+            _app.RecordingLoopMode = _loopModeIndex switch
+            {
+                1 => LoopMode.Count,
+                2 => LoopMode.Infinite,
+                _ => LoopMode.Single
+            };
+            _app.RecordingLoopCount = int.TryParse(LoopCountBox.Text, out var n) ? n : 1;
+            _app.RecordingLoopIntervalMs = int.TryParse(LoopIntervalBox.Text, out var iv) ? iv : 0;
+            var isCount = _loopModeIndex == 1;
             LoopCountBox.Visibility = isCount ? Visibility.Visible : Visibility.Collapsed;
             LoopCountSuffix.Visibility = isCount ? Visibility.Visible : Visibility.Collapsed;
         };
+        LoopCountBox.TextChanged += (_, _) =>
+            _app.RecordingLoopCount = int.TryParse(LoopCountBox.Text, out var n) ? n : 1;
+        LoopIntervalBox.TextChanged += (_, _) =>
+            _app.RecordingLoopIntervalMs = int.TryParse(LoopIntervalBox.Text, out var iv) ? iv : 0;
         LoadCategories();
     }
 
@@ -42,7 +56,10 @@ public partial class RecordingsPage : System.Windows.Controls.UserControl
     private void CategoryList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (CategoryList.SelectedItem is string cat)
+        {
+            _app.RecordingCategory = cat;
             LoadRecordings(cat);
+        }
     }
 
     private void RecordingList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -131,7 +148,7 @@ public partial class RecordingsPage : System.Windows.Controls.UserControl
         var mode = LoopMode.Single;
         int count = 1;
 
-        switch (LoopModeCombo.SelectedIndex)
+        switch (_loopModeIndex)
         {
             case 1:
                 mode = LoopMode.Count;
@@ -142,7 +159,9 @@ public partial class RecordingsPage : System.Windows.Controls.UserControl
                 break;
         }
 
-        await _app.ReplayEngine.PlayAsync(session, mode, count, 0);
+        int intervalMs = int.TryParse(LoopIntervalBox.Text, out var iv) ? iv : 0;
+        System.Diagnostics.Debug.WriteLine($"[RecordingsPage] Replay: mode={mode} count={count} intervalMs={intervalMs} selectedIndex={_loopModeIndex}");
+        await _app.ReplayEngine.PlayAsync(session, mode, count, intervalMs);
     }
 
     private void StopBtn_Click(object sender, RoutedEventArgs e)

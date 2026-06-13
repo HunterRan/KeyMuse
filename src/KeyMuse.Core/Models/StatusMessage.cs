@@ -6,6 +6,7 @@ public enum StatusMessageType
     Recording,
     Replaying,
     AutoClicking,
+    Warning,
     Error
 }
 
@@ -18,4 +19,5 @@ public struct StatusMessage
     public int RecentEventIndex;
     public int ProgressCurrent;
     public int ProgressTotal;
+    public int CountdownMs;
 }

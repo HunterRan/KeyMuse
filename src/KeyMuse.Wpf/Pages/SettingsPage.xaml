@@ -42,9 +42,13 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="100"/>
                             <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <Label Content="按键(VK)：" VerticalAlignment="Center"/>
-                        <TextBox Grid.Column="1" x:Name="ClickKeyBox" Margin="4" Text="0x2D" VerticalAlignment="Center"/>
+                        <Label Content="按键：" VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" x:Name="KeyCaptureBorder" Margin="4" Padding="8 4" CornerRadius="4" Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                            <TextBlock x:Name="KeyNameText" Text="Insert (Ins)" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}"/>
+                        </Border>
+                        <Button Grid.Column="2" x:Name="CaptureKeyBtn" Content="捕获" Margin="4 4 0 4" Padding="8 2" Click="CaptureKeyBtn_Click"/>
                     </Grid>
                     <Grid Grid.Row="1" Margin="0 4">
                         <Grid.ColumnDefinitions>

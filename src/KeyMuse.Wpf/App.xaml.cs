@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Windows;
 using Forms = System.Windows.Forms;
@@ -10,6 +11,11 @@ namespace KeyMuse.Wpf;
 public partial class App : System.Windows.Application
 {
     private static readonly string CrashLogPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "KeyMuse-crash.log");
+
+    [DllImport("winmm.dll")]
+    private static extern uint timeBeginPeriod(uint period);
+    [DllImport("winmm.dll")]
+    private static extern uint timeEndPeriod(uint period);
 
     private static void LogCrash(string stage, Exception ex)
     {
@@ -37,7 +43,11 @@ public partial class App : System.Windows.Application
     private string? _f6RecordingCategory;
 
     public string? SelectedRecordingPath { get; set; }
+    public string? RecordingCategory { get; set; }
     public Core.Models.WorkflowModel? SelectedWorkflow { get; set; }
+    public LoopMode RecordingLoopMode { get; set; } = LoopMode.Single;
+    public int RecordingLoopCount { get; set; } = 1;
+    public int RecordingLoopIntervalMs { get; set; }
 
     public HookManager HookManager { get; } = new();
     public InputCoordinator Coordinator { get; } = new();
@@ -61,6 +71,7 @@ public partial class App : System.Windows.Application
         Recorder.OnStatusChanged += msg => MessageQueue.Enqueue(msg);
         ReplayEngine.OnStatusChanged += msg => MessageQueue.Enqueue(msg);
         AutoClicker.OnStatusChanged += msg => MessageQueue.Enqueue(msg);
+        WorkflowExecutor.OnStatusChanged += msg => MessageQueue.Enqueue(msg);
     }
 
     private void ApplyProfileSettings()
@@ -73,10 +84,11 @@ public partial class App : System.Windows.Application
             {
                 if (!string.IsNullOrEmpty(firstProfile.StorageRoot))
                 {
-                    ConfigManager.SetStorageRoot(firstProfile.StorageRoot);
                     RecordingManager.SetStorageRoot(firstProfile.StorageRoot);
                     WorkflowManager.SetStorageRoot(firstProfile.StorageRoot);
                 }
+                AutoClicker.IntervalMs = firstProfile.AutoClickIntervalMs;
+                AutoClicker.KeyCode = firstProfile.AutoClickKeyCode;
                 SwitchTheme(firstProfile.Theme);
             }
         }
@@ -113,6 +125,7 @@ public partial class App : System.Windows.Application
         };
         try
         {
+            timeBeginPeriod(1);
             base.OnStartup(e);
             SetupTrayIcon();
             HookManager.Start();
@@ -210,7 +223,7 @@ public partial class App : System.Windows.Application
             var tempPath = await Recorder.StopRecordingAsync();
             if (tempPath != null)
             {
-                var cat = _f6RecordingCategory ?? "未分类";
+                var cat = _f6RecordingCategory ?? RecordingCategory ?? "未分类";
                 var saved = RecordingManager.SaveRecording(tempPath, cat);
                 var nameDlg = new Pages.TextInputDialog("保存录制", "录制名称（留空使用默认名称）：");
                 if (nameDlg.ShowDialog() == true && !string.IsNullOrWhiteSpace(nameDlg.Answer))
@@ -229,10 +242,15 @@ public partial class App : System.Windows.Application
         }
         else
         {
-            var dlg = new Controls.CategoryPickerDialog();
-            if (dlg.ShowDialog() != true || string.IsNullOrWhiteSpace(dlg.SelectedCategory))
-                return;
-            _f6RecordingCategory = dlg.SelectedCategory;
+            var category = RecordingCategory;
+            if (string.IsNullOrEmpty(category))
+            {
+                var dlg = new Controls.CategoryPickerDialog();
+                if (dlg.ShowDialog() != true || string.IsNullOrWhiteSpace(dlg.SelectedCategory))
+                    return;
+                category = dlg.SelectedCategory;
+            }
+            _f6RecordingCategory = category;
             Recorder.StartRecording();
             MessageQueue.Enqueue(new Core.Models.StatusMessage
             {
@@ -258,8 +276,10 @@ public partial class App : System.Windows.Application
         var path = SelectedRecordingPath;
         if (string.IsNullOrEmpty(path) || !File.Exists(path))
         {
-            Controls.DarkMessageBox.Show("请在录制页面先选中一个录制文件", "提示", Controls.DarkMessageBoxIcon.Info);
-            return;
+            var dlg = new Controls.RecordingBrowserDialog();
+            if (dlg.ShowDialog() != true || dlg.SelectedFilePath == null)
+                return;
+            path = dlg.SelectedFilePath;
         }
 
         var session = await Recorder.LoadSessionAsync(path!);
@@ -270,7 +290,7 @@ public partial class App : System.Windows.Application
         }
 
         if (_mainWindow != null) _mainWindow.WindowState = System.Windows.WindowState.Minimized;
-        _ = ReplayEngine.PlayAsync(session, LoopMode.Single);
+        _ = ReplayEngine.PlayAsync(session, RecordingLoopMode, RecordingLoopCount, RecordingLoopIntervalMs);
         MessageQueue.Enqueue(new Core.Models.StatusMessage
         {
             Type = Core.Models.StatusMessageType.Replaying,
@@ -280,9 +300,9 @@ public partial class App : System.Windows.Application
 
     private async void OnF8ReplayWorkflow()
     {
-        if (ReplayEngine.IsPlaying)
+        if (WorkflowExecutor.IsRunning)
         {
-            ReplayEngine.Stop();
+            WorkflowExecutor.Stop();
             MessageQueue.Enqueue(new Core.Models.StatusMessage
             {
                 Type = Core.Models.StatusMessageType.Idle,
@@ -294,8 +314,10 @@ public partial class App : System.Windows.Application
         var wf = SelectedWorkflow;
         if (wf == null)
         {
-            Controls.DarkMessageBox.Show("请在工作流页面先选中一个工作流", "提示", Controls.DarkMessageBoxIcon.Info);
-            return;
+            var dlg = new Controls.WorkflowPickerDialog();
+            if (dlg.ShowDialog() != true || dlg.SelectedWorkflow == null)
+                return;
+            wf = dlg.SelectedWorkflow;
         }
 
         if (_mainWindow != null) _mainWindow.WindowState = System.Windows.WindowState.Minimized;
@@ -320,7 +342,6 @@ public partial class App : System.Windows.Application
         }
         else
         {
-            AutoClicker.KeyCode = -1;
             AutoClicker.Start();
             MessageQueue.Enqueue(new Core.Models.StatusMessage
             {
@@ -344,6 +365,7 @@ public partial class App : System.Windows.Application
 
     private void ShutdownApp()
     {
+        timeEndPeriod(1);
         _hotKeyManager?.Dispose();
         Recorder.StopRecordingAsync().ConfigureAwait(false);
         ReplayEngine.Stop();

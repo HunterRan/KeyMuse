@@ -22,6 +22,7 @@ public class WorkflowExecutor
     private bool _isRunning;
 
     public bool IsRunning => _isRunning;
+    public event Action<StatusMessage>? OnStatusChanged;
     public event Action<WorkflowProgress>? OnProgress;
     public event Action<string>? OnError;
 
@@ -39,18 +40,21 @@ public class WorkflowExecutor
 
         try
         {
-            var isInfinite = workflow.TotalCount <= 0;
             var progress = new WorkflowProgress
             {
                 TotalSteps = workflow.Steps.Count,
-                TotalOverallCount = isInfinite ? -1 : workflow.TotalCount,
                 IsRunning = true
             };
 
-            for (int overall = 0; isInfinite || overall < workflow.TotalCount; overall++)
+            for (int overall = 0; ; overall++)
             {
-                progress.CurrentOverallCount = overall + 1;
                 if (_cts.IsCancellationRequested) break;
+
+                var isInfinite = workflow.TotalCount <= 0;
+                if (!isInfinite && overall >= workflow.TotalCount) break;
+
+                progress.TotalOverallCount = isInfinite ? -1 : workflow.TotalCount;
+                progress.CurrentOverallCount = overall + 1;
 
                 for (int stepIdx = 0; stepIdx < workflow.Steps.Count; stepIdx++)
                 {
@@ -89,7 +93,21 @@ public class WorkflowExecutor
                     }
 
                     if (step.IntervalMs > 0 && stepIdx < workflow.Steps.Count - 1)
-                        await Task.Delay(step.IntervalMs, _cts.Token);
+                    {
+                        int remaining = step.IntervalMs;
+                        while (remaining > 0 && !_cts.IsCancellationRequested)
+                        {
+                            int chunk = Math.Min(100, remaining);
+                            await Task.Delay(chunk, _cts.Token);
+                            remaining -= chunk;
+                            OnStatusChanged?.Invoke(new StatusMessage
+                            {
+                                Type = StatusMessageType.Replaying,
+                                Text = $"工作流 - 步骤 {stepIdx + 1}/{workflow.Steps.Count}",
+                                CountdownMs = Math.Max(0, remaining)
+                            });
+                        }
+                    }
                 }
             }
 

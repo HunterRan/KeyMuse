@@ -35,7 +35,9 @@ public class Recorder : IDisposable
         _startTick = Environment.TickCount;
         _cts = new CancellationTokenSource();
         _buffer.Clear();
+        _hookManager.ClearEventQueue();
         _hookManager.OnInputEvent += OnInputEventHandler;
+        _hookManager.EnableMouseCapture();
         _flushTask = Task.Run(() => FlushLoop(_cts.Token));
 
         OnStatusChanged?.Invoke(new StatusMessage
@@ -50,6 +52,7 @@ public class Recorder : IDisposable
     private void OnInputEventHandler(InputEvent evt)
     {
         if (!_isRecording) return;
+        if (evt.VirtualKeyCode == 0x75) return; // skip F6 (start/stop recording)
         evt.TimeOffsetMs = Environment.TickCount - _startTick;
         _buffer.Enqueue(evt);
 
@@ -89,6 +92,7 @@ public class Recorder : IDisposable
         if (!_isRecording) return null;
         _isRecording = false;
         _hookManager.OnInputEvent -= OnInputEventHandler;
+        _hookManager.DisableMouseCapture();
         _cts?.Cancel();
 
         if (_flushTask != null)

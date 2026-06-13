@@ -11,6 +11,7 @@ public partial class SettingsPage : System.Windows.Controls.UserControl
 {
     private readonly App _app;
     private ProfileConfig? _currentProfile;
+    private int _capturedKeyCode = 0x2D;
 
     public SettingsPage()
     {
@@ -42,7 +43,11 @@ public partial class SettingsPage : System.Windows.Controls.UserControl
         {
             _currentProfile = _app.ConfigManager.LoadProfile(name);
             if (_currentProfile != null)
+            {
                 LoadProfileSettings();
+                _app.AutoClicker.IntervalMs = _currentProfile.AutoClickIntervalMs;
+                _app.AutoClicker.KeyCode = _currentProfile.AutoClickKeyCode;
+            }
         }
     }
 
@@ -50,7 +55,8 @@ public partial class SettingsPage : System.Windows.Controls.UserControl
     {
         if (_currentProfile == null) return;
         ClickIntervalBox.Text = _currentProfile.AutoClickIntervalMs.ToString();
-        ClickKeyBox.Text = _currentProfile.AutoClickKeyCode < 0 ? "鼠标左键" : $"0x{_currentProfile.AutoClickKeyCode:X2}";
+        _capturedKeyCode = _currentProfile.AutoClickKeyCode;
+        KeyNameText.Text = KeyMuse.Core.Helpers.KeyNames.GetName(_capturedKeyCode);
 
         StorageRootBox.Text = _currentProfile.StorageRoot ?? _app.ConfigManager.ProfilesDir;
 
@@ -77,15 +83,7 @@ public partial class SettingsPage : System.Windows.Controls.UserControl
         if (_currentProfile == null) return;
 
         _currentProfile.AutoClickIntervalMs = int.TryParse(ClickIntervalBox.Text, out var interval) ? interval : 1000;
-        _currentProfile.AutoClickToggleMode = true;
-
-        var keyText = ClickKeyBox.Text.Trim();
-        if (keyText == "鼠标左键")
-            _currentProfile.AutoClickKeyCode = -1;
-        else if (keyText.StartsWith("0x", System.StringComparison.OrdinalIgnoreCase))
-            _currentProfile.AutoClickKeyCode = System.Convert.ToInt32(keyText, 16);
-        else if (int.TryParse(keyText, out var keyCode))
-            _currentProfile.AutoClickKeyCode = keyCode;
+        _currentProfile.AutoClickKeyCode = _capturedKeyCode;
 
         _currentProfile.Theme = ThemeCombo.SelectedIndex switch
         {
@@ -101,6 +99,9 @@ public partial class SettingsPage : System.Windows.Controls.UserControl
             ApplyStorageRoot(newRoot);
         }
 
+        _app.AutoClicker.IntervalMs = _currentProfile.AutoClickIntervalMs;
+        _app.AutoClicker.KeyCode = _currentProfile.AutoClickKeyCode;
+
         _app.ConfigManager.SaveProfile(_currentProfile);
         _app.SwitchTheme(_currentProfile.Theme);
         ShowStoragePaths();
@@ -112,8 +113,11 @@ public partial class SettingsPage : System.Windows.Controls.UserControl
         if (_currentProfile == null) return;
         _currentProfile.AutoClickIntervalMs = 1000;
         _currentProfile.AutoClickKeyCode = -1;
+        _capturedKeyCode = -1;
+        KeyNameText.Text = "鼠标左键";
+        _app.AutoClicker.IntervalMs = 1000;
+        _app.AutoClicker.KeyCode = -1;
         _app.ConfigManager.SaveProfile(_currentProfile);
-        LoadProfileSettings();
         DarkMessageBox.Show("已恢复默认设置", "KeyMuse", DarkMessageBoxIcon.Info);
     }
 
@@ -146,8 +150,21 @@ public partial class SettingsPage : System.Windows.Controls.UserControl
 
     private void ApplyStorageRoot(string root)
     {
-        _app.ConfigManager.SetStorageRoot(root);
         _app.RecordingManager.SetStorageRoot(root);
         _app.WorkflowManager.SetStorageRoot(root);
+    }
+
+    private async void CaptureKeyBtn_Click(object sender, RoutedEventArgs e)
+    {
+        CaptureKeyBtn.IsEnabled = false;
+        KeyNameText.Text = "按任意键...";
+        KeyCaptureBorder.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0x33, 0x5B, 0xC0, 0xEB));
+
+        var (vkCode, name) = await _app.HookManager.CaptureNextKeyAsync();
+
+        _capturedKeyCode = vkCode;
+        KeyNameText.Text = name;
+        KeyCaptureBorder.Background = (System.Windows.Media.Brush)FindResource("InputBgBrush");
+        CaptureKeyBtn.IsEnabled = true;
     }
 }

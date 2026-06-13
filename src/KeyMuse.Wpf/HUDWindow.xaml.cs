@@ -51,6 +51,20 @@ public partial class HUDWindow : Window
         timer.Start();
     }
 
+    private static readonly Brush RecColor = new SolidColorBrush(Color.FromArgb(0xCC, 0x22, 0x66, 0x22));
+    private static readonly Brush PlayColor = new SolidColorBrush(Color.FromArgb(0xCC, 0x22, 0x44, 0x66));
+    private static readonly Brush ClickColor = new SolidColorBrush(Color.FromArgb(0xCC, 0x66, 0x66, 0x22));
+    private static readonly Brush ErrorColor = new SolidColorBrush(Color.FromArgb(0xCC, 0x66, 0x22, 0x22));
+    private static readonly Brush WarningColor = new SolidColorBrush(Color.FromArgb(0xCC, 0x88, 0x66, 0x11));
+    private static readonly Brush IdleColor = new SolidColorBrush(Color.FromArgb(0xCC, 0x22, 0x22, 0x22));
+
+    private static readonly Brush RecIcon = new SolidColorBrush(Color.FromRgb(0xE0, 0x44, 0x44));
+    private static readonly Brush PlayIcon = new SolidColorBrush(Color.FromRgb(0x5B, 0xC0, 0xEB));
+    private static readonly Brush ClickIcon = new SolidColorBrush(Color.FromRgb(0xEB, 0xCB, 0x5B));
+    private static readonly Brush ErrorIcon = new SolidColorBrush(Color.FromRgb(0xEB, 0x5B, 0x5B));
+    private static readonly Brush WarningIcon = new SolidColorBrush(Color.FromRgb(0xEB, 0xA5, 0x3B));
+    private static readonly Brush IdleIcon = new SolidColorBrush(Color.FromRgb(0x5B, 0xC0, 0xEB));
+
     private void PollMessages(object? sender, EventArgs e)
     {
         while (_app.MessageQueue.TryDequeue(out var msg))
@@ -70,16 +84,28 @@ public partial class HUDWindow : Window
                 ProgressText.Text = "";
             }
 
+            if (msg.CountdownMs > 0)
+            {
+                CountdownText.Text = $"间隔 {msg.CountdownMs / 1000.0:F1}s";
+            }
+            else
+            {
+                CountdownText.Text = "";
+            }
+
             UpdateEventList(msg.RecentEvents, msg.RecentEventIndex);
 
-            Background = msg.Type switch
+            var (bg, icon) = msg.Type switch
             {
-                Core.Models.StatusMessageType.Recording => new SolidColorBrush(Color.FromArgb(0xCC, 0x22, 0x66, 0x22)),
-                Core.Models.StatusMessageType.Replaying => new SolidColorBrush(Color.FromArgb(0xCC, 0x22, 0x44, 0x66)),
-                Core.Models.StatusMessageType.AutoClicking => new SolidColorBrush(Color.FromArgb(0xCC, 0x66, 0x66, 0x22)),
-                Core.Models.StatusMessageType.Error => new SolidColorBrush(Color.FromArgb(0xCC, 0x66, 0x22, 0x22)),
-                _ => new SolidColorBrush(Color.FromArgb(0xCC, 0x22, 0x22, 0x22))
+                Core.Models.StatusMessageType.Recording => (RecColor, RecIcon),
+                Core.Models.StatusMessageType.Replaying => (PlayColor, PlayIcon),
+                Core.Models.StatusMessageType.AutoClicking => (ClickColor, ClickIcon),
+                Core.Models.StatusMessageType.Warning => (WarningColor, WarningIcon),
+                Core.Models.StatusMessageType.Error => (ErrorColor, ErrorIcon),
+                _ => (IdleColor, IdleIcon)
             };
+            Background = bg;
+            StatusIcon.Foreground = icon;
         }
     }
 

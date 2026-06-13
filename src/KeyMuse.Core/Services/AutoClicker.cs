@@ -56,6 +56,7 @@ public class AutoClicker
     {
         try
         {
+            var lastFailCount = _coordinator.Sender.FailCount;
             while (!token.IsCancellationRequested)
             {
                 using (await _coordinator.AcquireAsync(token))
@@ -76,13 +77,28 @@ public class AutoClicker
                 }
 
                 ClickCount++;
-                OnStatusChanged?.Invoke(new StatusMessage
+                var currentFailCount = _coordinator.Sender.FailCount;
+                if (currentFailCount > lastFailCount)
                 {
-                    Type = StatusMessageType.AutoClicking,
-                    Text = $"连点中 - 间隔 {IntervalMs}ms",
-                    ProgressCurrent = ClickCount,
-                    ProgressTotal = 0
-                });
+                    lastFailCount = currentFailCount;
+                    OnStatusChanged?.Invoke(new StatusMessage
+                    {
+                        Type = StatusMessageType.Warning,
+                        Text = "模拟操作被拦截！请以管理员身份运行 KeyMuse 或检查安全软件",
+                        ProgressCurrent = ClickCount,
+                        ProgressTotal = 0
+                    });
+                }
+                else
+                {
+                    OnStatusChanged?.Invoke(new StatusMessage
+                    {
+                        Type = StatusMessageType.AutoClicking,
+                        Text = $"连点中 - 间隔 {IntervalMs}ms",
+                        ProgressCurrent = ClickCount,
+                        ProgressTotal = 0
+                    });
+                }
 
                 await Task.Delay(IntervalMs, token);
             }

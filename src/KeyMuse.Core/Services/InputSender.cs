@@ -13,6 +13,7 @@ public class InputSender
     private const uint MOUSEEVENTF_MIDDLEDOWN = 0x0020;
     private const uint MOUSEEVENTF_MIDDLEUP = 0x0040;
     private const uint MOUSEEVENTF_MOVE = 0x0001;
+    private const uint MOUSEEVENTF_ABSOLUTE = 0x8000;
     private const uint MOUSEEVENTF_WHEEL = 0x0800;
     private const uint KEYEVENTF_KEYDOWN = 0x0000;
     private const uint KEYEVENTF_KEYUP = 0x0002;
@@ -38,6 +39,19 @@ public class InputSender
     public bool SendMouseMove(int x, int y)
     {
         var input = CreateMouseInput(MOUSEEVENTF_MOVE, x, y, 0);
+        var result = SendInput(1, [input], Marshal.SizeOf<INPUT>());
+        if (result == 0) FailCount++;
+        return result > 0;
+    }
+
+    public bool SendMouseMoveAbs(int x, int y)
+    {
+        int screenWidth = GetSystemMetrics(0);
+        int screenHeight = GetSystemMetrics(1);
+        if (screenWidth <= 0 || screenHeight <= 0) return false;
+        int normX = x * 65535 / screenWidth;
+        int normY = y * 65535 / screenHeight;
+        var input = CreateMouseInput(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, normX, normY, 0);
         var result = SendInput(1, [input], Marshal.SizeOf<INPUT>());
         if (result == 0) FailCount++;
         return result > 0;
@@ -120,6 +134,9 @@ public class InputSender
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+
+    [DllImport("user32.dll")]
+    private static extern int GetSystemMetrics(int nIndex);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct INPUT

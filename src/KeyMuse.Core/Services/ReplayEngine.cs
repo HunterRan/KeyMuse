@@ -69,7 +69,19 @@ public class ReplayEngine
 
                 if (loop < loops - 1 && !token.IsCancellationRequested && loopIntervalMs > 0)
                 {
-                    await Task.Delay(loopIntervalMs, token);
+                    int remaining = loopIntervalMs;
+                    while (remaining > 0 && !token.IsCancellationRequested)
+                    {
+                        int chunk = Math.Min(100, remaining);
+                        await Task.Delay(chunk, token);
+                        remaining -= chunk;
+                        OnStatusChanged?.Invoke(new StatusMessage
+                        {
+                            Type = StatusMessageType.Replaying,
+                            Text = $"回放中 - 第 {CurrentLoop}/{TotalLoops} 轮",
+                            CountdownMs = Math.Max(0, remaining)
+                        });
+                    }
                 }
             }
 
@@ -105,7 +117,6 @@ public class ReplayEngine
     {
         var sender = _coordinator.Sender;
         var sw = Stopwatch.StartNew();
-        int accumulatedOriginal = 0;
 
         for (int i = 0; i < session.EventCount; i++)
         {
@@ -114,7 +125,7 @@ public class ReplayEngine
 
             var evt = session.Events[i];
 
-            if (i > 0 && evt.TimeOffsetMs > accumulatedOriginal)
+            if (i > 0)
             {
                 var waitMs = evt.TimeOffsetMs - sw.ElapsedMilliseconds;
                 if (waitMs > 0)
@@ -123,21 +134,29 @@ public class ReplayEngine
                 }
             }
 
-            SendEvent(sender, evt);
-            accumulatedOriginal = evt.TimeOffsetMs;
-
-            var recent = BuildContextWindow(session.Events, i);
-
-            OnStatusChanged?.Invoke(new StatusMessage
+            if (evt.Type == InputEventType.MouseMove)
             {
-                Type = StatusMessageType.Replaying,
-                Text = $"回放中 - 第 {CurrentLoop}/{TotalLoops} 轮",
-                Detail = evt.Description,
-                RecentEvents = recent,
-                RecentEventIndex = 2,
-                ProgressCurrent = CurrentEventIndex,
-                ProgressTotal = TotalEvents
-            });
+                sender.SendMouseMoveAbs(evt.X, evt.Y);
+            }
+            else
+            {
+                SendEvent(sender, evt);
+            }
+
+            if (evt.Type != InputEventType.MouseMove)
+            {
+                var recent = BuildContextWindow(session.Events, i);
+                OnStatusChanged?.Invoke(new StatusMessage
+                {
+                    Type = StatusMessageType.Replaying,
+                    Text = $"回放中 - 第 {CurrentLoop}/{TotalLoops} 轮",
+                    Detail = evt.Description,
+                    RecentEvents = recent,
+                    RecentEventIndex = 2,
+                    ProgressCurrent = CurrentEventIndex,
+                    ProgressTotal = TotalEvents
+                });
+            }
         }
     }
 
@@ -188,4 +207,5 @@ public class ReplayEngine
     {
         _cts?.Cancel();
     }
+
 }

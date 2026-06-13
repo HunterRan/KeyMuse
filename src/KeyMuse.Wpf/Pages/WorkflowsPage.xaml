@@ -42,7 +42,7 @@
                         <GridViewColumn Header="次数" Width="56">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBox Text="{Binding Count, UpdateSourceTrigger=LostFocus}" Width="44" HorizontalAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent">
+                                    <TextBox Text="{Binding Count, UpdateSourceTrigger=PropertyChanged}" Width="44" HorizontalAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent">
                                         <TextBox.Style>
                                             <Style TargetType="TextBox">
                                                 <Setter Property="Template">
@@ -61,7 +61,7 @@
                         <GridViewColumn Header="间隔(ms)" Width="80">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBox Text="{Binding IntervalMs, UpdateSourceTrigger=LostFocus}" Width="68" HorizontalAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent">
+                                    <TextBox Text="{Binding IntervalMs, UpdateSourceTrigger=PropertyChanged}" Width="68" HorizontalAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Center" BorderThickness="0" Background="Transparent">
                                         <TextBox.Style>
                                             <Style TargetType="TextBox">
                                                 <Setter Property="Template">

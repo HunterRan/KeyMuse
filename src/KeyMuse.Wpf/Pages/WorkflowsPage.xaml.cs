@@ -12,6 +12,7 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
     private readonly App _app;
     private WorkflowModel? _currentWorkflow;
     private ObservableCollection<StepViewModel> _steps = new();
+    private int _repeatModeIndex;
 
     public WorkflowsPage()
     {
@@ -20,7 +21,8 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
         StepList.ItemsSource = _steps;
         RepeatModeCombo.SelectionChanged += (_, _) =>
         {
-            var isCount = RepeatModeCombo.SelectedIndex == 1;
+            _repeatModeIndex = RepeatModeCombo.SelectedIndex;
+            var isCount = _repeatModeIndex == 1;
             RepeatCountLabel.Visibility = isCount ? Visibility.Visible : Visibility.Collapsed;
             RepeatCountBox.Visibility = isCount ? Visibility.Visible : Visibility.Collapsed;
             RepeatCountSuffix.Visibility = isCount ? Visibility.Visible : Visibility.Collapsed;
@@ -42,11 +44,18 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
             _app.SelectedWorkflow = wf;
             RefreshSteps();
             if (wf.TotalCount <= 0)
+            {
+                _repeatModeIndex = 2;
                 RepeatModeCombo.SelectedIndex = 2;
+            }
             else if (wf.TotalCount == 1)
+            {
+                _repeatModeIndex = 0;
                 RepeatModeCombo.SelectedIndex = 0;
+            }
             else
             {
+                _repeatModeIndex = 1;
                 RepeatModeCombo.SelectedIndex = 1;
                 RepeatCountBox.Text = wf.TotalCount.ToString();
             }
@@ -68,8 +77,7 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
             {
                 Index = i + 1,
                 FilePath = step.RecordingFilePath,
-                Count = step.Count,
-                IntervalMs = step.IntervalMs
+                Source = step
             });
         }
     }
@@ -77,17 +85,22 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
     private void SaveCurrentWorkflow()
     {
         if (_currentWorkflow == null) return;
-        _currentWorkflow.Steps.Clear();
-        foreach (var vm in _steps)
+
+        while (_currentWorkflow.Steps.Count > _steps.Count)
+            _currentWorkflow.Steps.RemoveAt(_currentWorkflow.Steps.Count - 1);
+        while (_currentWorkflow.Steps.Count < _steps.Count)
+            _currentWorkflow.Steps.Add(new WorkflowStep());
+
+        for (int i = 0; i < _steps.Count; i++)
         {
-            _currentWorkflow.Steps.Add(new WorkflowStep
-            {
-                RecordingFilePath = vm.FilePath,
-                Count = vm.Count,
-                IntervalMs = vm.IntervalMs
-            });
+            var step = _currentWorkflow.Steps[i];
+            var vm = _steps[i];
+            step.RecordingFilePath = vm.FilePath;
+            step.Count = vm.Count;
+            step.IntervalMs = vm.IntervalMs;
         }
-        _currentWorkflow.TotalCount = RepeatModeCombo.SelectedIndex switch
+
+        _currentWorkflow.TotalCount = _repeatModeIndex switch
         {
             2 => -1,
             1 => int.TryParse(RepeatCountBox.Text, out var n) ? n : 1,
@@ -186,6 +199,9 @@ public partial class WorkflowsPage : System.Windows.Controls.UserControl
     {
         if (_currentWorkflow == null) { DarkMessageBox.Show("请先选择一个工作流", "提示", DarkMessageBoxIcon.Info); return; }
         SaveCurrentWorkflow();
+        System.Diagnostics.Debug.WriteLine($"[WorkflowsPage] Run: totalCount={_currentWorkflow.TotalCount} steps={_currentWorkflow.Steps.Count}");
+        for (int i = 0; i < _currentWorkflow.Steps.Count; i++)
+            System.Diagnostics.Debug.WriteLine($"  step[{i}]: count={_currentWorkflow.Steps[i].Count} intervalMs={_currentWorkflow.Steps[i].IntervalMs}");
 
         RunBtn.IsEnabled = false;
         ExecStatus.Text = "执行中...";
@@ -244,18 +260,30 @@ public class StepViewModel : System.ComponentModel.INotifyPropertyChanged
     public string FilePath { get; set; } = "";
     public string DisplayName => System.IO.Path.GetFileNameWithoutExtension(FilePath);
 
+    public WorkflowStep? Source { get; set; }
+
     private int _count = 1;
     public int Count
     {
-        get => _count;
-        set { _count = value; PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Count))); }
+        get => Source?.Count ?? _count;
+        set
+        {
+            if (Source != null) Source.Count = value;
+            _count = value;
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Count)));
+        }
     }
 
     private int _intervalMs;
     public int IntervalMs
     {
-        get => _intervalMs;
-        set { _intervalMs = value; PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(IntervalMs))); }
+        get => Source?.IntervalMs ?? _intervalMs;
+        set
+        {
+            if (Source != null) Source.IntervalMs = value;
+            _intervalMs = value;
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(IntervalMs)));
+        }
     }
 
     public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;

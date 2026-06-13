@@ -26,6 +26,7 @@ public class HookManager : IDisposable
     private bool _isRunning;
     private HookProc? _keyboardHookProc;
     private HookProc? _mouseHookProc;
+    private volatile bool _mouseCaptureEnabled;
 
     public event Action<InputEvent>? OnInputEvent;
     public event Action<string>? OnError;
@@ -33,6 +34,22 @@ public class HookManager : IDisposable
     private readonly ConcurrentQueue<InputEvent> _eventQueue = new();
 
     public bool IsRunning => _isRunning;
+    public bool IsMouseCaptureEnabled => _mouseCaptureEnabled;
+
+    public void ClearEventQueue()
+    {
+        while (_eventQueue.TryDequeue(out _)) { }
+    }
+
+    public void EnableMouseCapture()
+    {
+        _mouseCaptureEnabled = true;
+    }
+
+    public void DisableMouseCapture()
+    {
+        _mouseCaptureEnabled = false;
+    }
 
     public void Start()
     {
@@ -82,10 +99,19 @@ public class HookManager : IDisposable
             _keyboardHookProc = KeyboardHookCallback;
             _mouseHookProc = MouseHookCallback;
             _keyboardHookId = SetWindowsHookEx(WH_KEYBOARD_LL, _keyboardHookProc, nint.Zero, 0);
-            _mouseHookId = SetWindowsHookEx(WH_MOUSE_LL, _mouseHookProc, nint.Zero, 0);
 
             while (!token.IsCancellationRequested)
             {
+                if (_mouseCaptureEnabled && _mouseHookId == nint.Zero)
+                {
+                    _mouseHookId = SetWindowsHookEx(WH_MOUSE_LL, _mouseHookProc, nint.Zero, 0);
+                }
+                else if (!_mouseCaptureEnabled && _mouseHookId != nint.Zero)
+                {
+                    UnhookWindowsHookEx(_mouseHookId);
+                    _mouseHookId = nint.Zero;
+                }
+
                 if (NativeMethods.PeekMessage(out _, nint.Zero, 0, 0, 1))
                 {
                     NativeMethods.GetMessage(out _, nint.Zero, 0, 0);
@@ -120,7 +146,7 @@ public class HookManager : IDisposable
             _keyboardHookProc = KeyboardHookCallback;
             _keyboardHookId = SetWindowsHookEx(WH_KEYBOARD_LL, _keyboardHookProc, nint.Zero, 0);
         }
-        if (_mouseHookId == nint.Zero)
+        if (_mouseCaptureEnabled && _mouseHookId == nint.Zero)
         {
             _mouseHookProc = MouseHookCallback;
             _mouseHookId = SetWindowsHookEx(WH_MOUSE_LL, _mouseHookProc, nint.Zero, 0);
@@ -155,7 +181,7 @@ public class HookManager : IDisposable
     {
         try
         {
-            if (nCode >= 0)
+            if (nCode >= 0 && _mouseCaptureEnabled)
             {
                 var mhs = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
                 var type = wParam switch
@@ -275,6 +301,52 @@ public class HookManager : IDisposable
         public nint lParam;
         public uint time;
         public POINT pt;
+    }
+
+    public Task<(int vkCode, string name)> CaptureNextKeyAsync(int timeoutMs = 5000)
+    {
+        var tcs = new TaskCompletionSource<(int, string)>();
+        var cts = new CancellationTokenSource(timeoutMs);
+
+        EnableMouseCapture();
+
+        Action<InputEvent>? handler = null;
+        handler = evt =>
+        {
+            if (evt.Type == InputEventType.KeyDown)
+            {
+                OnInputEvent -= handler;
+                DisableMouseCapture();
+                cts.Dispose();
+                var name = Helpers.KeyNames.GetName(evt.VirtualKeyCode);
+                tcs.TrySetResult((evt.VirtualKeyCode, name));
+            }
+            else if (evt.Type == InputEventType.MouseDown)
+            {
+                OnInputEvent -= handler;
+                DisableMouseCapture();
+                cts.Dispose();
+                var name = evt.MouseData switch
+                {
+                    0 => "鼠标左键",
+                    1 => "鼠标右键",
+                    2 => "鼠标中键",
+                    _ => $"鼠标按键{evt.MouseData}"
+                };
+                var code = evt.MouseData == 0 ? -1 : 1000 + evt.MouseData;
+                tcs.TrySetResult((code, name));
+            }
+        };
+
+        OnInputEvent += handler;
+        cts.Token.Register(() =>
+        {
+            OnInputEvent -= handler;
+            DisableMouseCapture();
+            tcs.TrySetResult((0x2D, "Insert (Ins)"));
+        });
+
+        return tcs.Task;
     }
 
     ~HookManager()
