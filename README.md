@@ -82,7 +82,7 @@ cd KeyMuse
 dotnet restore
 dotnet build --configuration Release
 dotnet test
-dotnet publish src/KeyMuse.Wpf/KeyMuse.Wpf.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
+dotnet publish src/KeyMuse.Wpf/KeyMuse.Wpf.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish/v0.0.7
 ```
 
 ---

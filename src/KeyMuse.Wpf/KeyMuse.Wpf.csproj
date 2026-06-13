@@ -10,6 +10,9 @@
     <RootNamespace>KeyMuse.Wpf</RootNamespace>
     <ApplicationIcon>..\..\assets\KeyMuse.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
     <Using Remove="System.Drawing" />
